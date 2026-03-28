@@ -1,0 +1,83 @@
+name: CI — RIC Conductor SaaS
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ── Tests Backend ─────────────────────────────────────────────────────────
+  backend-tests:
+    name: Backend — pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Instalar dependencias
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Ejecutar tests
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///:memory:
+          JWT_SECRET: test_secret_ci
+          ENVIRONMENT: test
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short
+
+  # ── Lint Frontend ─────────────────────────────────────────────────────────
+  frontend-lint:
+    name: Frontend — lint y tipos
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Type check
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Lint
+        run: |
+          cd frontend
+          npm run lint
+
+  # ── Build Docker (solo en main) ───────────────────────────────────────────
+  docker-build:
+    name: Verificar builds Docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [backend-tests, frontend-lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build ./backend -t ric-backend:ci
+
+      - name: Build pdf-service image
+        run: docker build ./pdf-service -t ric-pdf:ci

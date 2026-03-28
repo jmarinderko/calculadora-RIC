@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora RIC — Conductores Eléctricos Chile</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0D1117;
+    --bg2:       #161B22;
+    --bg3:       #21262D;
+    --border:    #30363D;
+    --border2:   #484F58;
+    --accent:    #F0B429;
+    --accent2:   #E09318;
+    --green:     #3FB950;
+    --green-bg:  #0A2714;
+    --green-bdr: #1A4A2A;
+    --red:       #F85149;
+    --red-bg:    #2D0F0F;
+    --red-bdr:   #5A1A1A;
+    --blue:      #58A6FF;
+    --blue-bg:   #0D2035;
+    --text:      #E6EDF3;
+    --text2:     #8B949E;
+    --text3:     #6E7681;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+    --r:         6px;
+  }
+
+  /* ── TEMA CLARO ── */
+  body.light {
+    --bg:        #F6F8FA;
+    --bg2:       #FFFFFF;
+    --bg3:       #EAEEF2;
+    --border:    #D0D7DE;
+    --border2:   #AFB8C1;
+    --accent:    #D4900A;
+    --accent2:   #B8780A;
+    --green:     #1A7F37;
+    --green-bg:  #DAFBE1;
+    --green-bdr: #ABE0B7;
+    --red:       #CF222E;
+    --red-bg:    #FFEBE9;
+    --red-bdr:   #FFCECB;
+    --blue:      #0969DA;
+    --blue-bg:   #DDF4FF;
+    --text:      #1F2328;
+    --text2:     #656D76;
+    --text3:     #9198A1;
+  }
+
+  /* Transición suave al cambiar tema */
+  *, *::before, *::after {
+    transition: background-color 0.25s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  /* Excepciones: no animar transforms ni box-shadow para no interferir con otros efectos */
+  .seg-btn, .btn-calc, .form-input, .form-select { transition: background-color 0.25s ease, border-color 0.2s ease, color 0.2s ease; }
+
+  /* Botón tema */
+  .theme-toggle {
+    margin-left: auto;
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.25s ease;
+  }
+  .theme-toggle .knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), background 0.25s ease;
+  }
+  body.light .theme-toggle .knob { transform: translateX(16px); }
+  .theme-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+    background: var(--bg2);
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 13px;
+    color: #000 !important;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .logo-text { font-family: var(--mono); font-size: 14px; font-weight: 500; }
+  .logo-text span { color: var(--accent); }
+  .header-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  /* ─── LAYOUT ─── */
+  .main { display: grid; grid-template-columns: 420px 1fr; min-height: calc(100vh - 56px); }
+
+  /* ─── PANEL IZQUIERDO — INPUTS ─── */
+  .panel-inputs {
+    border-right: 1px solid var(--border);
+    padding: 24px;
+    overflow-y: auto;
+    background: var(--bg2);
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+  .form-label .unit {
+    color: var(--text3);
+    font-weight: 400;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  /* ─── SEGMENTED CONTROL ─── */
+  .seg-control {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 4px;
+  }
+  .seg-btn {
+    padding: 7px 4px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .seg-btn.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+  }
+  .seg-btn:not(.active):hover { background: var(--border); color: var(--text); }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* ─── CALC BUTTON ─── */
+  .btn-calc {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: var(--r);
+    padding: 12px;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+    margin-top: 4px;
+  }
+  .btn-calc:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-calc:active { transform: translateY(0); }
+
+  /* ─── PANEL DERECHO — RESULTADOS ─── */
+  .panel-results {
+    padding: 24px 32px;
+    overflow-y: auto;
+  }
+
+  /* ─── ESTADO VACÍO ─── */
+  .empty-state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text3);
+  }
+  .empty-icon {
+    width: 64px; height: 64px;
+    border: 2px dashed var(--border2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .empty-state p { font-family: var(--mono); font-size: 13px; }
+
+  /* ─── RESULTADO HEADER ─── */
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-title { font-family: var(--mono); font-size: 13px; color: var(--text2); }
+  .result-badge {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .badge-ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bdr); }
+  .badge-err { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bdr); }
+
+  /* ─── TARJETAS PRINCIPALES ─── */
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .result-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .result-card.highlight {
+    border-color: var(--accent);
+    background: rgba(240,180,41,0.05);
+  }
+  .result-card.ok-card {
+    border-color: var(--green-bdr);
+    background: var(--green-bg);
+  }
+  .result-card.err-card {
+    border-color: var(--red-bdr);
+    background: var(--red-bg);
+  }
+  .rc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .rc-value {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+  .rc-value.accent { color: var(--accent); }
+  .rc-value.green { color: var(--green); }
+  .rc-value.red { color: var(--red); }
+  .rc-unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text3);
+    margin-left: 4px;
+  }
+  .rc-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* ─── TABLA DETALLE ─── */
+  .detail-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .detail-section-title {
+    background: var(--bg3);
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row:hover { background: var(--bg3); }
+  .dr-key {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .dr-val {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    text-align: right;
+  }
+  .dr-val.ok { color: var(--green); }
+  .dr-val.fail { color: var(--red); }
+  .dr-val.warn { color: var(--accent); }
+
+  /* ─── BARRA DE CAÍDA ─── */
+  .caida-bar-wrap {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .caida-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+  .caida-bar-bg {
+    background: var(--bg3);
+    border-radius: 4px;
+    height: 8px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .caida-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .caida-bar-fill.ok-bar { background: var(--green); }
+  .caida-bar-fill.warn-bar { background: var(--accent); }
+  .caida-bar-fill.fail-bar { background: var(--red); }
+  .caida-limit-line {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: var(--text3);
+    opacity: 0.6;
+  }
+
+  /* ─── CONFIGURACIÓN ALIMENTADOR ─── */
+  .config-box {
+    padding: 16px;
+    background: var(--blue-bg);
+    border: 1px solid #1A3A5C;
+    border-radius: var(--r);
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--blue);
+    line-height: 1.7;
+  }
+  .config-box strong { color: var(--text); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 6px; }
+
+  /* ─── ADVERTENCIAS ─── */
+  .warn-box {
+    padding: 12px 16px;
+    background: rgba(240,180,41,0.08);
+    border: 1px solid rgba(240,180,41,0.3);
+    border-radius: var(--r);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+  .warn-box::before { content: '⚠ '; }
+
+  .info-box {
+    padding: 12px 16px;
+    background: var(--blue-bg);
+    border: 1px solid #1A3A5C;
+    border-radius: var(--r);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--blue);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+  .info-box::before { content: 'ℹ '; }
+
+  /* ─── TOGGLE UNIDAD SECCIÓN ─── */
+  #toggle-unidad button:hover { opacity: 0.85; }
+  #toggle-unidad button.active-unit { background: var(--accent) !important; color: #000 !important; }
+  #toggle-unidad button:not(.active-unit) { background: transparent !important; color: var(--text3) !important; }
+
+  /* ─── RADIO CURVATURA ─── */
+  .curv-box {
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(63,185,80,0.06), rgba(88,166,255,0.06));
+    border: 1px solid #1A4A2A;
+    border-radius: var(--r);
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    line-height: 1.7;
+  }
+  .curv-box strong { display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text3); margin-bottom:8px; }
+  .curv-value { font-size:28px; font-weight:600; color:var(--green); line-height:1; }
+  .curv-unit  { font-size:13px; font-weight:400; color:var(--text3); margin-left:4px; }
+  .curv-sub   { font-size:11px; color:var(--text3); margin-top:4px; }
+  .curv-grid  { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+  .curv-item  { background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:10px 12px; }
+  .curv-item-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+  .curv-item-val   { font-size:16px; font-weight:600; color:var(--text); }
+  .curv-item-sub   { font-size:10px; color:var(--text3); margin-top:2px; }
+
+  /* ─── NOTA RIC ─── */
+  .ric-ref {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    line-height: 1.8;
+  }
+
+  /* ─── ESTRÉS TÉRMICO ─── */
+  .estres-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .estres-header {
+    background: var(--bg3);
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .estres-header .badge-falla {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--blue-bg);
+    color: var(--blue);
+    border: 1px solid #1A3A5C;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .estres-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .estres-cell {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .estres-cell:nth-child(3n) { border-right: none; }
+  .estres-cell:nth-last-child(-n+3) { border-bottom: none; }
+  .estres-cell-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .estres-cell-val {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .estres-cell-val.ok   { color: var(--green); }
+  .estres-cell-val.fail { color: var(--red); }
+  .estres-cell-val.warn { color: var(--accent); }
+  .estres-cell-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+  .estres-barra-wrap { padding: 14px 16px; border-top: 1px solid var(--border); }
+  .estres-barra-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .estres-barra-bg {
+    background: var(--bg3);
+    border-radius: 4px;
+    height: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .estres-barra-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .estres-nota {
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    line-height: 1.7;
+  }
+
+  /* ─── INPUTS EN TEMA CLARO ─── */
+  body.light .form-input,
+  body.light .form-select {
+    color: var(--text);
+    background: var(--bg3);
+    border-color: var(--border);
+  }
+  body.light .form-input:focus,
+  body.light .form-select:focus { border-color: var(--accent); }
+  body.light .seg-btn.active { background: var(--accent); color: #000; }
+  body.light .seg-btn:not(.active) { color: var(--text2); }
+  body.light .btn-calc { background: var(--accent); color: #000; }
+  body.light .btn-calc:hover { background: var(--accent2); }
+  body.light .detail-row:hover { background: var(--bg3); }
+  body.light #inp-factor-total { color: var(--accent); }
+  /* Scrollbar claro */
+  body.light ::-webkit-scrollbar { width: 6px; }
+  body.light ::-webkit-scrollbar-track { background: var(--bg3); }
+  body.light ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 860px) {
+    .main { grid-template-columns: 1fr; }
+    .panel-inputs { border-right: none; border-bottom: 1px solid var(--border); }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">RIC</div>
+  <span class="logo-text">Conductor<span>.calc</span></span>
+  <span class="header-badge">NCh Elec 4/2003 · SEC Chile</span>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+    <span class="theme-label" id="theme-label">Oscuro</span>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTema()" title="Cambiar tema claro / oscuro" aria-label="Cambiar tema">
+      <div class="knob"></div>
+    </button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ══════════════ PANEL INPUTS ══════════════ -->
+  <div class="panel-inputs">
+    <div class="panel-title">Parámetros de entrada</div>
+
+    <!-- SISTEMA -->
+    <div class="form-group">
+      <label class="form-label">Sistema eléctrico</label>
+      <div class="seg-control" id="seg-sistema">
+        <button class="seg-btn active" data-val="trifasico" onclick="setSistema(this)">Trifásico</button>
+        <button class="seg-btn" data-val="bifasico" onclick="setSistema(this)">Bifásico</button>
+        <button class="seg-btn" data-val="monofasico" onclick="setSistema(this)">Monofásico</button>
+      </div>
+    </div>
+
+    <!-- TENSIÓN -->
+    <div class="form-group">
+      <label class="form-label" id="lbl-tension">Tensión de servicio <span class="unit">V</span></label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-tension">
+          <option value="380">380 V — Trifásico estándar</option>
+          <option value="220">220 V — Monofásico / Bifásico</option>
+          <option value="400">400 V — Trifásico 50Hz</option>
+          <option value="custom">Otro valor...</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" id="grp-tension-custom" style="display:none;">
+      <label class="form-label">Tensión personalizada <span class="unit">V</span></label>
+      <input type="number" class="form-input" id="inp-tension-custom" placeholder="Ej: 415" min="100" max="1000">
+    </div>
+
+    <!-- POTENCIA -->
+    <div class="form-group">
+      <label class="form-label">Potencia de la carga <span class="unit">kW</span></label>
+      <input type="number" class="form-input" id="inp-potencia" placeholder="Ej: 15" step="0.1" min="0.1">
+    </div>
+
+    <!-- FACTOR DE POTENCIA -->
+    <div class="form-group">
+      <label class="form-label">Factor de potencia (cos φ)</label>
+      <input type="number" class="form-input" id="inp-fp" placeholder="Ej: 0.85" step="0.01" min="0.5" max="1" value="0.85">
+    </div>
+
+    <!-- LONGITUD -->
+    <div class="form-group">
+      <label class="form-label">Longitud del circuito <span class="unit">m</span></label>
+      <input type="number" class="form-input" id="inp-longitud" placeholder="Ej: 80" step="1" min="1">
+    </div>
+
+    <hr class="divider">
+    <div class="panel-title">Instalación y canalización</div>
+
+    <!-- TIPO DE CANALIZACIÓN -->
+    <div class="form-group">
+      <label class="form-label">Tipo de canalización</label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-canalizacion" onchange="actualizarFactor()">
+          <option value="ducto_pvc" data-factor="1.00" data-nombre="Ducto PVC en pared o losa">Ducto PVC — pared o losa</option>
+          <option value="ducto_metalico" data-factor="1.00" data-nombre="Ducto metálico (conduit)">Ducto metálico (conduit)</option>
+          <option value="bandeja_perforada" data-factor="1.10" data-nombre="Bandeja portacables perforada">Bandeja portacables perforada</option>
+          <option value="bandeja_escalera" data-factor="1.20" data-nombre="Bandeja tipo escalera al aire">Bandeja tipo escalera al aire</option>
+          <option value="enterrado_directo" data-factor="0.85" data-nombre="Enterrado directo en tierra">Enterrado directo en tierra</option>
+          <option value="enterrado_ducto" data-factor="0.80" data-nombre="Enterrado en ducto bajo tierra">Enterrado en ducto bajo tierra</option>
+          <option value="aereo_libre" data-factor="1.25" data-nombre="Cable aéreo al aire libre">Cable aéreo al aire libre</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TEMPERATURA AMBIENTE -->
+    <div class="form-group">
+      <label class="form-label">Temperatura ambiente <span class="unit">°C</span></label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-temp" onchange="actualizarFactor()">
+          <option value="25" data-ft="1.05">25°C</option>
+          <option value="30" data-ft="1.00" selected>30°C — Referencia RIC</option>
+          <option value="35" data-ft="0.94">35°C</option>
+          <option value="40" data-ft="0.87">40°C</option>
+          <option value="45" data-ft="0.79">45°C</option>
+          <option value="50" data-ft="0.71">50°C</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ALTITUD msnm -->
+    <div class="form-group">
+      <label class="form-label">Altitud de instalación <span class="unit">msnm</span></label>
+      <input type="number" class="form-input" id="inp-msnm" placeholder="Ej: 2400" step="100" min="0" max="5500" value="0" oninput="actualizarFactor()">
+      <div id="nota-msnm" style="display:none;font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:6px;padding:6px 10px;background:rgba(240,180,41,0.07);border-radius:4px;border-left:2px solid var(--accent);"></div>
+    </div>
+
+    <!-- NÚMERO DE CONDUCTORES AGRUPADOS -->
+    <div class="form-group">
+      <label class="form-label">Conductores agrupados en el mismo ducto</label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-agrupamiento" onchange="actualizarFactor()">
+          <option value="1" data-fg="1.00">1 circuito (sin reducción)</option>
+          <option value="2" data-fg="0.80">2 circuitos — factor 0.80</option>
+          <option value="3" data-fg="0.70">3 circuitos — factor 0.70</option>
+          <option value="4" data-fg="0.65">4 circuitos — factor 0.65</option>
+          <option value="6" data-fg="0.57">5–6 circuitos — factor 0.57</option>
+          <option value="9" data-fg="0.50">7–9 circuitos — factor 0.50</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- MATERIAL CONDUCTOR -->
+    <div class="form-group">
+      <label class="form-label">Material del conductor</label>
+      <div class="seg-control" id="seg-material">
+        <button class="seg-btn active" data-val="cu" onclick="setMaterial(this)">Cu — Cobre</button>
+        <button class="seg-btn" data-val="al" onclick="setMaterial(this)">Al — Aluminio</button>
+      </div>
+    </div>
+
+    <!-- FACTOR DE CORRECCIÓN TOTAL (display) -->
+    <div class="form-group">
+      <label class="form-label">Factor de corrección total <span class="unit">(Ft × Fg × Fa)</span></label>
+      <input type="text" class="form-input" id="inp-factor-total" readonly value="1.00" style="color:var(--accent);cursor:default;">
+    </div>
+
+    <hr class="divider">
+    <div class="panel-title">Opciones avanzadas</div>
+
+    <!-- LÍMITE CAÍDA -->
+    <div class="form-group">
+      <label class="form-label">Límite de caída de tensión <span class="unit">%</span></label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-caida-limite">
+          <option value="2">2% — Alumbrado (RIC Art. 5.5.4)</option>
+          <option value="3" selected>3% — Fuerza motriz (RIC Art. 5.5.4)</option>
+          <option value="5">5% — Instalaciones industriales</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- CABLES POR FASE (Manual override) -->
+    <div class="form-group">
+      <label class="form-label">Cables por fase (paralelo)</label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-cables-fase">
+          <option value="auto">Automático (recomendado)</option>
+          <option value="1">1 cable por fase</option>
+          <option value="2">2 cables por fase en paralelo</option>
+          <option value="3">3 cables por fase en paralelo</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="panel-title">Tipo de circuito y carga</div>
+
+    <!-- TIPO DE CIRCUITO RIC -->
+    <div class="form-group">
+      <label class="form-label">Tipo de circuito <span class="unit">(RIC Art. 5.3.1 / 5.5.4)</span></label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-tipo-circuito" onchange="onTipoCircuitoChange()">
+          <option value="alumbrado"      data-secmin="1.5" data-caida="2" data-fd="1.00">Circuito de alumbrado — mín. 1.5 mm²</option>
+          <option value="fuerza"         data-secmin="2.5" data-caida="3" data-fd="1.00">Circuito de fuerza — mín. 2.5 mm²</option>
+          <option value="tomacorrientes" data-secmin="2.5" data-caida="3" data-fd="1.00">Circuito de tomacorrientes — mín. 2.5 mm²</option>
+          <option value="motor"          data-secmin="2.5" data-caida="3" data-fd="1.25">Circuito de motor — mín. 2.5 mm² · Fd 1.25</option>
+          <option value="alimentador"    data-secmin="4.0" data-caida="3" data-fd="1.25">Alimentador general — mín. 4.0 mm²</option>
+        </select>
+      </div>
+    </div>
+    <div id="nota-circuito" style="font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:-10px;margin-bottom:12px;padding:6px 10px;background:var(--blue-bg);border-radius:4px;border-left:2px solid #1A3A5C;"></div>
+
+    <!-- TIPO DE CARGA -->
+    <div class="form-group">
+      <label class="form-label">Tipo de carga</label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-tipo-carga" onchange="onTipoCargaChange()">
+          <option value="motor"       data-fp="0.85" data-fd="1.25" data-caida="3">Motor eléctrico</option>
+          <option value="iluminacion" data-fp="0.90" data-fd="1.00" data-caida="2">Iluminación</option>
+          <option value="electronico" data-fp="0.75" data-fd="1.00" data-caida="2">Equipo electrónico / TI</option>
+          <option value="resistivo"   data-fp="1.00" data-fd="1.00" data-caida="3">Carga resistiva (calefacción)</option>
+          <option value="alimentador" data-fp="0.85" data-fd="1.25" data-caida="3">Alimentador general / tablero</option>
+        </select>
+      </div>
+    </div>
+    <div id="nota-fp-auto" style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:-10px;margin-bottom:12px;padding:6px 10px;background:rgba(240,180,41,0.07);border-radius:4px;border-left:2px solid var(--accent);">
+      cos&#160;&#966; y factor de demanda ajustados al tipo de carga seleccionado.
+    </div>
+
+    <!-- FACTOR DE DEMANDA -->
+    <div class="form-group">
+      <label class="form-label">Factor de demanda <span class="unit">(motores 1.25 · RIC Art.5.2)</span></label>
+      <input type="number" class="form-input" id="inp-fd" value="1.25" step="0.01" min="1.00" max="2.00">
+    </div>
+
+    <!-- MONTAJE: A LA VISTA / BANCO DE DUCTO / OCULTO -->
+    <div class="form-group">
+      <label class="form-label">Montaje de la canalización</label>
+      <div class="seg-control" id="seg-montaje">
+        <button class="seg-btn active" data-val="vista"  onclick="setMontaje(this)">A la vista</button>
+        <button class="seg-btn"        data-val="banco"  onclick="setMontaje(this)">Banco de ducto</button>
+        <button class="seg-btn"        data-val="oculto" onclick="setMontaje(this)">Oculto / empotrado</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="panel-title">Estrés térmico por cortocircuito</div>
+
+    <!-- CORRIENTE DE CORTOCIRCUITO -->
+    <div class="form-group">
+      <label class="form-label">Corriente de cortocircuito (Icc) <span class="unit">kA</span></label>
+      <input type="number" class="form-input" id="inp-icc" placeholder="Ej: 10" step="0.1" min="0.1" value="">
+    </div>
+
+    <!-- TIEMPO DE DESPEJE DE FALLA -->
+    <div class="form-group">
+      <label class="form-label">Tiempo de despeje de falla (t) <span class="unit">segundos</span></label>
+      <input type="number" class="form-input" id="inp-tcc" placeholder="Ej: 0.5" step="0.01" min="0.01" max="5" value="">
+    </div>
+
+    <!-- TIPO DE FALLA -->
+    <div class="form-group">
+      <label class="form-label">Tipo de falla de cortocircuito</label>
+      <div class="select-wrap">
+        <select class="form-select" id="sel-tipo-falla">
+          <option value="3f"   data-factor="1.00">Trifásico (3F) — máxima severidad</option>
+          <option value="2f"   data-factor="0.87">Bifásico (2F) — factor 0.87</option>
+          <option value="2ft"  data-factor="1.00">Bifásico a tierra (2FT) — factor 1.00</option>
+          <option value="1ft"  data-factor="0.58">Monofásico a tierra (1FT) — factor 0.58</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TEMP INICIAL / FINAL (opcionales) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">T° inicial <span class="unit">°C</span></label>
+        <input type="number" class="form-input" id="inp-t-inicial" value="75" step="1" min="20" max="150">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">T° máx. adm. <span class="unit">°C</span></label>
+        <input type="number" class="form-input" id="inp-t-max" value="160" step="1" min="100" max="350">
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:6px;margin-bottom:16px;">
+      THW/THHN: 75°C → 160°C · XLPE: 90°C → 250°C · Cu desnudo: 20°C → 300°C
+    </div>
+
+    <button class="btn-calc" onclick="calcular()">&#9889; Calcular conductor</button>
+  </div>
+
+  <!-- ══════════════ PANEL RESULTADOS ══════════════ -->
+  <div class="panel-results" id="panel-results">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">⚡</div>
+      <p>Ingresa los parámetros y presiona calcular</p>
+      <p style="font-size:11px;color:var(--text3);">NCh Elec 4/2003 · RIC Art. 5.5</p>
+    </div>
+    <div id="result-content" style="display:none;"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── TEMA CLARO / OSCURO ─────────────────────────────────────────────────────
+function toggleTema() {
+  const body  = document.body;
+  const label = document.getElementById('theme-label');
+  if (body.classList.contains('light')) {
+    body.classList.remove('light');
+    label.textContent = 'Oscuro';
+    try { localStorage.setItem('ric-tema', 'dark'); } catch(e) {}
+  } else {
+    body.classList.add('light');
+    label.textContent = 'Claro';
+    try { localStorage.setItem('ric-tema', 'light'); } catch(e) {}
+  }
+}
+// Restaurar preferencia guardada
+(function() {
+  try {
+    const saved = localStorage.getItem('ric-tema');
+    if (saved === 'light') {
+      document.body.classList.add('light');
+      const lbl = document.getElementById('theme-label');
+      if (lbl) lbl.textContent = 'Claro';
+    }
+  } catch(e) {}
+})();
+
+// ─── TABLAS RIC ─────────────────────────────────────────────────────────────
+
+// Capacidades de corriente según RIC / NCh Elec 4/2003 (conductores THW 75°C)
+// Columnas: [sección mm², I_max_Cu_ducto, I_max_Cu_aire, I_max_Al_ducto, I_max_Al_aire, R_Cu_ohm_km, R_Al_ohm_km, calibre_AWG]
+const TABLA_RIC = [
+  { sec: 1.5,   icu_d: 13,  icu_a: 17,  ial_d: 0,   ial_a: 0,   rcu: 12.10, ral: 0,      awg: '14 AWG' },
+  { sec: 2.5,   icu_d: 18,  icu_a: 23,  ial_d: 0,   ial_a: 0,   rcu: 7.41,  ral: 0,      awg: '12 AWG' },
+  { sec: 4,     icu_d: 24,  icu_a: 31,  ial_d: 0,   ial_a: 0,   rcu: 4.61,  ral: 0,      awg: '10 AWG' },
+  { sec: 6,     icu_d: 31,  icu_a: 40,  ial_d: 0,   ial_a: 0,   rcu: 3.08,  ral: 0,      awg: '8 AWG'  },
+  { sec: 10,    icu_d: 42,  icu_a: 54,  ial_d: 32,  ial_a: 42,  rcu: 1.83,  ral: 3.08,   awg: '6 AWG'  },
+  { sec: 16,    icu_d: 56,  icu_a: 73,  ial_d: 44,  ial_a: 57,  rcu: 1.15,  ral: 1.91,   awg: '4 AWG'  },
+  { sec: 25,    icu_d: 73,  icu_a: 95,  ial_d: 57,  ial_a: 75,  rcu: 0.727, ral: 1.20,   awg: '2 AWG'  },
+  { sec: 35,    icu_d: 89,  icu_a: 117, ial_d: 70,  ial_a: 92,  rcu: 0.524, ral: 0.868,  awg: '1 AWG'  },
+  { sec: 50,    icu_d: 108, icu_a: 141, ial_d: 84,  ial_a: 110, rcu: 0.387, ral: 0.641,  awg: '1/0 AWG'},
+  { sec: 70,    icu_d: 136, icu_a: 179, ial_d: 107, ial_a: 140, rcu: 0.268, ral: 0.443,  awg: '2/0 AWG'},
+  { sec: 95,    icu_d: 164, icu_a: 216, ial_d: 129, ial_a: 169, rcu: 0.193, ral: 0.320,  awg: '3/0 AWG'},
+  { sec: 120,   icu_d: 188, icu_a: 249, ial_d: 149, ial_a: 197, rcu: 0.153, ral: 0.253,  awg: '4/0 AWG'},
+  { sec: 150,   icu_d: 216, icu_a: 285, ial_d: 170, ial_a: 225, rcu: 0.124, ral: 0.206,  awg: '250 MCM'},
+  { sec: 185,   icu_d: 245, icu_a: 324, ial_d: 194, ial_a: 256, rcu: 0.0991,ral: 0.164,  awg: '350 MCM'},
+  { sec: 240,   icu_d: 286, icu_a: 380, ial_d: 227, ial_a: 300, rcu: 0.0754,ral: 0.125,  awg: '500 MCM'},
+  { sec: 300,   icu_d: 328, icu_a: 435, ial_d: 261, ial_a: 346, rcu: 0.0601,ral: 0.100,  awg: '600 MCM'},
+];
+
+// ─── ESTADO ──────────────────────────────────────────────────────────────────
+let estado = { sistema: 'trifasico', material: 'cu' };
+
+function setSistema(btn) {
+  document.querySelectorAll('#seg-sistema .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  estado.sistema = btn.dataset.val;
+
+  const selTension = document.getElementById('sel-tension');
+  if (estado.sistema === 'monofasico' || estado.sistema === 'bifasico') {
+    selTension.options[0].selected = false;
+    // suggest 220
+    for (let i = 0; i < selTension.options.length; i++) {
+      if (selTension.options[i].value === '220') { selTension.options[i].selected = true; break; }
+    }
+  } else {
+    for (let i = 0; i < selTension.options.length; i++) {
+      if (selTension.options[i].value === '380') { selTension.options[i].selected = true; break; }
+    }
+  }
+}
+
+function setMaterial(btn) {
+  document.querySelectorAll('#seg-material .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  estado.material = btn.dataset.val;
+}
+
+document.getElementById('sel-tension').addEventListener('change', function() {
+  document.getElementById('grp-tension-custom').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+// Factor de corrección por altitud (IEC 60364-5-52 / práctica RIC)
+// Sobre 1000 msnm el aire es menos denso → menor disipación de calor
+// Tabla basada en reducción lineal: ~1% cada 100m sobre 1000 msnm (máx ~20% a 3000m)
+function factorAltitud(msnm) {
+  if (msnm <= 1000) return 1.00;
+  if (msnm <= 1500) return 0.97;
+  if (msnm <= 2000) return 0.94;
+  if (msnm <= 2500) return 0.91;
+  if (msnm <= 3000) return 0.88;
+  if (msnm <= 3500) return 0.84;
+  if (msnm <= 4000) return 0.80;
+  if (msnm <= 4500) return 0.76;
+  return 0.71; // >4500 msnm
+}
+
+function actualizarFactor() {
+  const selTemp = document.getElementById('sel-temp');
+  const selAg   = document.getElementById('sel-agrupamiento');
+  const selCan  = document.getElementById('sel-canalizacion');
+  const msnm    = parseFloat(document.getElementById('inp-msnm').value) || 0;
+
+  const ft = parseFloat(selTemp.options[selTemp.selectedIndex].dataset.ft);
+  const fg = parseFloat(selAg.options[selAg.selectedIndex].dataset.fg);
+  const fa = factorAltitud(msnm);
+
+  const total = (ft * fg * fa).toFixed(3);
+  document.getElementById('inp-factor-total').value = total;
+
+  // Nota de altitud
+  const notaEl = document.getElementById('nota-msnm');
+  if (msnm > 1000) {
+    notaEl.style.display = 'block';
+    const reduccion = ((1 - fa) * 100).toFixed(0);
+    notaEl.textContent = `Fa = ${fa} — reducción ${reduccion}% capacidad corriente por altitud (IEC 60364-5-52)`;
+  } else {
+    notaEl.style.display = 'none';
+  }
+}
+actualizarFactor();
+
+// ─── TIPO DE CARGA ───────────────────────────────────────────────────────────
+let estado_montaje = 'vista';
+
+// ─── TIPO DE CIRCUITO ────────────────────────────────────────────────────────
+const NOTAS_CIRCUITO = {
+  alumbrado:      'RIC Art. 5.3.1: sección mínima 1.5 mm² · Límite caída de tensión: 2% (Art. 5.5.4)',
+  fuerza:         'RIC Art. 5.3.1: sección mínima 2.5 mm² · Límite caída de tensión: 3% (Art. 5.5.4)',
+  tomacorrientes: 'RIC Art. 5.3.1: sección mínima 2.5 mm² · Máx. 10 tomacorrientes por circuito (Art. 6.3)',
+  motor:          'RIC Art. 5.2: Fd = 1.25 obligatorio · Protección a 125% In · Sección mínima 2.5 mm²',
+  alimentador:    'Práctica RIC: sección mínima 4.0 mm² · Considerar diversidad de cargas (Art. 4.4)',
+};
+
+function onTipoCircuitoChange() {
+  const sel = document.getElementById('sel-tipo-circuito');
+  const opt = sel.options[sel.selectedIndex];
+  const val = opt.value;
+
+  // Ajustar fd y caída según circuito
+  document.getElementById('inp-fd').value = opt.dataset.fd;
+  const selCaida = document.getElementById('sel-caida-limite');
+  for (let i = 0; i < selCaida.options.length; i++) {
+    if (selCaida.options[i].value === opt.dataset.caida) { selCaida.selectedIndex = i; break; }
+  }
+
+  // Sincronizar tipo de carga con circuito cuando corresponde
+  const mapCargaCircuito = {
+    motor: 'motor', alimentador: 'alimentador',
+    alumbrado: 'iluminacion', fuerza: 'resistivo', tomacorrientes: 'electronico'
+  };
+  const selCarga = document.getElementById('sel-tipo-carga');
+  const targetCarga = mapCargaCircuito[val];
+  for (let i = 0; i < selCarga.options.length; i++) {
+    if (selCarga.options[i].value === targetCarga) { selCarga.selectedIndex = i; break; }
+  }
+  onTipoCargaChange();
+
+  // Mostrar nota normativa
+  const nota = document.getElementById('nota-circuito');
+  nota.textContent = NOTAS_CIRCUITO[val] || '';
+}
+// Inicializar circuito
+onTipoCircuitoChange();
+
+// ─── TOGGLE mm² / AWG en el resultado ────────────────────────────────────────
+let _secFinalMm2 = 0;
+let _awgFinal    = '';
+let _matFinal    = '';
+let _unidadActual = 'mm2';
+let _lastCalcCtx = null;  // contexto completo del último cálculo
+
+// Tabla AWG → mm² para conversión bidireccional
+const AWG_A_MM2 = {
+  '14 AWG':2.5,'12 AWG':4,'10 AWG':6,'8 AWG':10,
+  '6 AWG':16,'4 AWG':25,'2 AWG':35,'1 AWG':50,
+  '1/0 AWG':50,'2/0 AWG':70,'3/0 AWG':95,'4/0 AWG':120,
+  '250 MCM':120,'350 MCM':185,'500 MCM':240,'600 MCM':300
+};
+
+function setUnidadSec(u) {
+  _unidadActual = u;
+  const valEl  = document.getElementById('val-seccion');
+  const unitEl = document.getElementById('unit-seccion');
+  const subEl  = document.getElementById('sub-seccion');
+  const btnMm2 = document.getElementById('btn-mm2');
+  const btnAwg = document.getElementById('btn-awg');
+  if (!valEl) return;
+
+  if (u === 'mm2') {
+    valEl.childNodes[0].textContent = _secFinalMm2;
+    unitEl.textContent = 'mm²';
+    subEl.textContent  = _awgFinal + ' · ' + _matFinal;
+    if (btnMm2) { btnMm2.classList.add('active-unit'); }
+    if (btnAwg) { btnAwg.classList.remove('active-unit'); }
+  } else {
+    valEl.childNodes[0].textContent = _awgFinal;
+    unitEl.textContent = '';
+    subEl.textContent  = _secFinalMm2 + ' mm² · ' + _matFinal;
+    if (btnMm2) { btnMm2.classList.remove('active-unit'); }
+    if (btnAwg) { btnAwg.classList.add('active-unit'); }
+  }
+
+  // Si el panel de edición está abierto, sincronizar sus selectores
+  const editPanel = document.getElementById('vista-sec-edicion');
+  if (editPanel && editPanel.style.display !== 'none') {
+    const mm2Panel = document.getElementById('sec-edit-mm2');
+    const awgPanel = document.getElementById('sec-edit-awg');
+    if (mm2Panel) mm2Panel.style.display = u === 'mm2' ? 'block' : 'none';
+    if (awgPanel) awgPanel.style.display = u === 'awg'  ? 'block' : 'none';
+    previewSecEdit();
+  }
+}
+
+// ─── EDICIÓN MANUAL DE SECCIÓN ──────────────────────────────────────────────
+
+function activarEdicionSec() {
+  document.getElementById('vista-sec-normal').style.display  = 'none';
+  document.getElementById('vista-sec-edicion').style.display = 'block';
+  document.getElementById('btn-editar-sec').style.display    = 'none';
+  // Pre-seleccionar el valor actual
+  const sel = _unidadActual === 'awg'
+    ? document.getElementById('sel-sec-awg')
+    : document.getElementById('sel-sec-mm2');
+  // encontrar opción más cercana
+  const opts = Array.from(sel.options);
+  let best = opts[0];
+  let bestDiff = Infinity;
+  for (const o of opts) {
+    const diff = Math.abs(parseFloat(o.value) - _secFinalMm2);
+    if (diff < bestDiff) { bestDiff = diff; best = o; }
+  }
+  best.selected = true;
+  previewSecEdit();
+  // Mostrar el selector correcto según unidad activa
+  document.getElementById('sec-edit-mm2').style.display = _unidadActual === 'mm2' ? 'block' : 'none';
+  document.getElementById('sec-edit-awg').style.display = _unidadActual === 'awg' ? 'block' : 'none';
+}
+
+function cancelarEdicionSec() {
+  document.getElementById('vista-sec-normal').style.display  = 'block';
+  document.getElementById('vista-sec-edicion').style.display = 'none';
+  document.getElementById('btn-editar-sec').style.display    = 'block';
+  document.getElementById('preview-sec-edit').textContent    = '';
+}
+
+function previewSecEdit() {
+  const secMm2 = getSecEditMm2();
+  const fila = TABLA_RIC.find(r => r.sec >= secMm2) || TABLA_RIC[TABLA_RIC.length-1];
+  if (!fila || !_lastCalcCtx) return;
+  const ctx = _lastCalcCtx;
+  const esAire = ['bandeja_perforada','bandeja_escalera','aereo_libre'].includes(ctx.selCan);
+  const imax = (ctx.material==='cu' ? (esAire?fila.icu_a:fila.icu_d) : (esAire?fila.ial_a:fila.ial_d)) * ctx.cablesFinal * ctx.factorTotal;
+  const r_ohm = (ctx.material==='cu'?fila.rcu:fila.ral) / (ctx.cablesFinal * 1000);
+  let dvpct;
+  if (ctx.sistema==='trifasico') dvpct=(Math.sqrt(3)*ctx.I_calc*r_ohm*ctx.longitud/ctx.tension)*100;
+  else if (ctx.sistema==='bifasico') dvpct=(2*ctx.I_calc*r_ohm*ctx.longitud/(2*ctx.tension))*100;
+  else dvpct=(2*ctx.I_calc*r_ohm*ctx.longitud/ctx.tension)*100;
+  const termOk = imax >= ctx.I_calc;
+  const caidaOk = dvpct <= ctx.limCaida;
+  const iconT = termOk ? '✓' : '✗';
+  const iconC = caidaOk ? '✓' : '✗';
+  document.getElementById('preview-sec-edit').innerHTML =
+    `${fila.awg} &nbsp;·&nbsp; I_max: ${imax.toFixed(1)} A ${iconT} &nbsp;·&nbsp; ΔV: ${dvpct.toFixed(2)}% ${iconC}`;
+  document.getElementById('preview-sec-edit').style.color = (termOk && caidaOk) ? 'var(--green)' : 'var(--red)';
+}
+
+function getSecEditMm2() {
+  if (_unidadActual === 'awg') {
+    return parseFloat(document.getElementById('sel-sec-awg').value);
+  }
+  return parseFloat(document.getElementById('sel-sec-mm2').value);
+}
+
+function aplicarSecManual() {
+  if (!_lastCalcCtx) return;
+  const secManual = getSecEditMm2();
+  const ctx = _lastCalcCtx;
+  const fila = TABLA_RIC.find(r => r.sec >= secManual) || TABLA_RIC[TABLA_RIC.length-1];
+  if (!fila) return;
+
+  const esAire = ['bandeja_perforada','bandeja_escalera','aereo_libre'].includes(ctx.selCan);
+  const r_ohm  = (ctx.material==='cu'?fila.rcu:fila.ral) / (ctx.cablesFinal * 1000);
+  const imaxFinal = (ctx.material==='cu'?(esAire?fila.icu_a:fila.icu_d):(esAire?fila.ial_a:fila.ial_d)) * ctx.cablesFinal * ctx.factorTotal;
+
+  let dvFinal, dvpctFinal;
+  if (ctx.sistema==='trifasico') { dvFinal=Math.sqrt(3)*ctx.I_calc*r_ohm*ctx.longitud; dvpctFinal=(dvFinal/ctx.tension)*100; }
+  else if (ctx.sistema==='bifasico') { dvFinal=2*ctx.I_calc*r_ohm*ctx.longitud; dvpctFinal=(dvFinal/(2*ctx.tension))*100; }
+  else { dvFinal=2*ctx.I_calc*r_ohm*ctx.longitud; dvpctFinal=(dvFinal/ctx.tension)*100; }
+
+  const cumpleTermico = imaxFinal >= ctx.I_calc;
+  const cumpleCaida   = dvpctFinal <= ctx.limCaida;
+  const cumple        = cumpleTermico && cumpleCaida;
+
+  const secNeutro = ctx.sistema==='trifasico' && secManual>16 ? secManual/2 : secManual;
+  const secTierra = secManual<=16 ? secManual : secManual<=35 ? 16 : secManual/2;
+  const radioData = calcRadioCurvatura(secManual, ctx.montaje, ctx.sistema, ctx.cablesFinal);
+  const ajustadoPorCaida = secManual !== ctx.secFinal;
+
+  mostrarResultado({
+    ...ctx,
+    secFinal: fila.sec,
+    filaFinal: fila,
+    imaxFinal,
+    dvpctFinal,
+    dvFinal,
+    cumple, cumpleTermico, cumpleCaida,
+    ajustadoPorCaida: false,
+    ajustadoPorMinimo: false,
+    secNeutro, secTierra, radioData,
+    awg: fila.awg,
+    modoManual: true,
+    secManualOriginal: ctx.secFinal,
+  });
+}
+
+// setUnidadSec ya maneja los selectores de edición directamente (ver función arriba)
+
+function onTipoCargaChange() {
+  const sel = document.getElementById('sel-tipo-carga');
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('inp-fp').value  = opt.dataset.fp;
+  document.getElementById('inp-fd').value  = opt.dataset.fd;
+  // Autoselect límite caída
+  const caida = opt.dataset.caida;
+  const selCaida = document.getElementById('sel-caida-limite');
+  for (let i = 0; i < selCaida.options.length; i++) {
+    if (selCaida.options[i].value === caida) { selCaida.selectedIndex = i; break; }
+  }
+}
+// Inicializar al cargar
+onTipoCargaChange();
+
+function setMontaje(btn) {
+  document.querySelectorAll('#seg-montaje .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  estado_montaje = btn.dataset.val;
+}
+
+// ─── RADIO MÍNIMO DE CURVATURA ────────────────────────────────────────────────
+// Según NEC 300.34 / IEC 60364 y práctica RIC:
+// Cable THW multiconductor: min 8× diámetro exterior
+// Cable unipolar: min 6× diámetro exterior para ducto, 10× para banco
+// Diámetro exterior aproximado THW (mm): d ≈ 1.05 × sqrt(n_cond) × sqrt(sec) × 0.95 + 3 mm aislación
+const DIAMETRO_CABLE = {
+  // sec_mm2 → [diámetro unipolar Cu mm, diámetro multiconductor mm]
+  1.5:  [5.8,  9.5],
+  2.5:  [6.5,  11.0],
+  4:    [7.0,  12.5],
+  6:    [7.8,  13.5],
+  10:   [9.2,  16.5],
+  16:   [11.0, 19.5],
+  25:   [13.5, 24.0],
+  35:   [15.0, 27.0],
+  50:   [17.5, 31.0],
+  70:   [20.5, 36.5],
+  95:   [24.0, 43.0],
+  120:  [26.5, 48.0],
+  150:  [29.5, 54.0],
+  185:  [33.0, 60.0],
+  240:  [38.0, 69.0],
+  300:  [42.0, 78.0],
+};
+
+function calcRadioCurvatura(secMm2, montaje, sistema, cablesPorFase) {
+  const dims = DIAMETRO_CABLE[secMm2] || [Math.sqrt(secMm2)*3.8+3, Math.sqrt(secMm2)*5.5+5];
+  const dUnipolar = dims[0];
+  const dMulti    = dims[1];
+
+  // Decidir si es unipolar o multiconductor
+  // En trifásico normalmente cables unipolares; en monofásico puede ser bipolar
+  const esUnipolar = sistema !== 'monofasico';
+  const dBase = esUnipolar ? dUnipolar : dMulti;
+
+  let factorMultiplicador, descripcionFactor;
+  if (montaje === 'banco') {
+    factorMultiplicador = 12; // banco de ducto: más restrictivo
+    descripcionFactor = '12× diámetro (banco de ducto)';
+  } else if (montaje === 'oculto') {
+    factorMultiplicador = 8;
+    descripcionFactor = '8× diámetro (oculto/empotrado)';
+  } else {
+    factorMultiplicador = esUnipolar ? 8 : 6;
+    descripcionFactor = esUnipolar ? '8× diámetro (unipolar a la vista)' : '6× diámetro (multiconductor a la vista)';
+  }
+
+  const radioCurv = dBase * factorMultiplicador;
+  return {
+    diametro: dBase,
+    factor: factorMultiplicador,
+    radio: radioCurv,
+    descripcionFactor,
+    esUnipolar,
+    tipoConstructivo: esUnipolar ? 'Unipolar (THW)' : 'Multiconductor (THWN/NYY)',
+    montaje,
+    // Radio interno (sin el espesor del cable)
+    radioInterno: radioCurv - dBase,
+  };
+}
+
+// ─── CÁLCULO PRINCIPAL ───────────────────────────────────────────────────────
+
+function calcular() {
+  // ── Leer inputs
+  const selTension = document.getElementById('sel-tension');
+  let tension = selTension.value === 'custom'
+    ? parseFloat(document.getElementById('inp-tension-custom').value)
+    : parseFloat(selTension.value);
+  const potencia   = parseFloat(document.getElementById('inp-potencia').value);
+  const fp         = parseFloat(document.getElementById('inp-fp').value);
+  const fd         = parseFloat(document.getElementById('inp-fd').value) || 1.0;
+  const longitud   = parseFloat(document.getElementById('inp-longitud').value);
+  const sistema    = estado.sistema;
+  const material   = estado.material;
+  const limCaida   = parseFloat(document.getElementById('sel-caida-limite').value);
+  const cablesFaseManual = document.getElementById('sel-cables-fase').value;
+  const selTipoCarga = document.getElementById('sel-tipo-carga');
+  const tipoCargaNombre = selTipoCarga.options[selTipoCarga.selectedIndex].text;
+  const selTipoCircuito = document.getElementById('sel-tipo-circuito');
+  const tipoCircuitoNombre = selTipoCircuito.options[selTipoCircuito.selectedIndex].text;
+  const montaje = estado_montaje;
+
+  const selTemp = document.getElementById('sel-temp');
+  const selAg   = document.getElementById('sel-agrupamiento');
+  const selCan  = document.getElementById('sel-canalizacion');
+  const ft = parseFloat(selTemp.options[selTemp.selectedIndex].dataset.ft);
+  const fg = parseFloat(selAg.options[selAg.selectedIndex].dataset.fg);
+  const fc = parseFloat(selCan.options[selCan.selectedIndex].dataset.factor);
+  const msnm = parseFloat(document.getElementById('inp-msnm').value) || 0;
+  const fa = factorAltitud(msnm);
+  const factorTotal = ft * fg * fa;
+  const nombreCan = selCan.options[selCan.selectedIndex].dataset.nombre;
+  const esAire = ['bandeja_perforada','bandeja_escalera','aereo_libre'].includes(selCan.value);
+  const esEnterrado = ['enterrado_directo','enterrado_ducto'].includes(selCan.value);
+
+  if (!tension || isNaN(tension) || !potencia || isNaN(potencia) || !longitud || isNaN(longitud)) {
+    alert('Por favor ingresa todos los campos requeridos.');
+    return;
+  }
+
+  // ── Corriente de diseño
+  let I_diseño;
+  const kW = potencia * 1000;
+  if (sistema === 'trifasico') {
+    I_diseño = kW / (Math.sqrt(3) * tension * fp);
+  } else if (sistema === 'bifasico') {
+    I_diseño = kW / (2 * tension * fp);  // bifásico: 2 fases
+  } else {
+    I_diseño = kW / (tension * fp);
+  }
+  // Factor de demanda según tipo de carga (RIC Art. 5.2)
+  const I_calc = I_diseño * fd;
+
+  // ── Buscar sección por capacidad térmica
+  // Corriente corregida requerida = I_calc / factorTotal
+  const I_req = I_calc / factorTotal;
+
+  let cablesPorFase = 1;
+  let seccionElegida = null;
+  let filaElegida = null;
+
+  const buscarSeccion = (nCables) => {
+    for (let row of TABLA_RIC) {
+      const imax = material === 'cu'
+        ? (esAire ? row.icu_a : row.icu_d)
+        : (esAire ? row.ial_a : row.ial_d);
+      if (imax === 0) continue;
+      if (imax * nCables >= I_req) return row;
+    }
+    return null;
+  };
+
+  if (cablesFaseManual === 'auto') {
+    for (let n = 1; n <= 3; n++) {
+      filaElegida = buscarSeccion(n);
+      if (filaElegida) { cablesPorFase = n; break; }
+    }
+  } else {
+    cablesPorFase = parseInt(cablesFaseManual);
+    filaElegida = buscarSeccion(cablesPorFase);
+  }
+
+  if (!filaElegida) {
+    mostrarError('La corriente calculada supera el máximo de las tablas RIC disponibles. Se requiere media tensión o análisis especial.');
+    return;
+  }
+
+  // ── Sección mínima normativa (RIC Art. 5.3.1) — usa tipo de CIRCUITO como fuente principal
+  const selCircuitoMin = document.getElementById('sel-tipo-circuito');
+  const tipoCircuitoVal = selCircuitoMin.options[selCircuitoMin.selectedIndex].value;
+  const SEC_MIN_CIRCUITO = {
+    alumbrado:      1.5,
+    fuerza:         2.5,
+    tomacorrientes: 2.5,
+    motor:          2.5,
+    alimentador:    4.0,
+  };
+  const secMinRIC = parseFloat(selCircuitoMin.options[selCircuitoMin.selectedIndex].dataset.secmin)
+                    || SEC_MIN_CIRCUITO[tipoCircuitoVal] || 1.5;
+  let ajustadoPorMinimo = false;
+  if (filaElegida.sec < secMinRIC) {
+    const filaMin = TABLA_RIC.find(r => r.sec >= secMinRIC);
+    if (filaMin) { filaElegida = filaMin; ajustadoPorMinimo = true; }
+  }
+
+  seccionElegida = filaElegida.sec;
+  const resistencia = (material === 'cu' ? filaElegida.rcu : filaElegida.ral) / (cablesPorFase * 1000); // Ω/m
+  const imaxCorregida = (material === 'cu' ? (esAire ? filaElegida.icu_a : filaElegida.icu_d)
+                                           : (esAire ? filaElegida.ial_a : filaElegida.ial_d)) * cablesPorFase * factorTotal;
+
+  // ── Caída de tensión (método impedancia simplificada, resistivo)
+  let deltaV, deltaVpct;
+  if (sistema === 'trifasico') {
+    deltaV = Math.sqrt(3) * I_calc * resistencia * longitud;
+    deltaVpct = (deltaV / tension) * 100;
+  } else if (sistema === 'bifasico') {
+    deltaV = 2 * I_calc * resistencia * longitud;
+    deltaVpct = (deltaV / (2 * tension)) * 100;
+  } else {
+    deltaV = 2 * I_calc * resistencia * longitud;
+    deltaVpct = (deltaV / tension) * 100;
+  }
+
+  // ── Si caída supera límite, buscar sección mayor
+  let seccionCaida = seccionElegida;
+  let filaCaida = filaElegida;
+  let cablesCaida = cablesPorFase;
+  let deltaVpctFinal = deltaVpct;
+  let ajustadoPorCaida = false;
+
+  if (deltaVpct > limCaida) {
+    for (let row of TABLA_RIC) {
+      for (let n = cablesPorFase; n <= 3; n++) {
+        const r = (material === 'cu' ? row.rcu : row.ral) / (n * 1000);
+        let dv, dvpct;
+        if (sistema === 'trifasico') { dv = Math.sqrt(3)*I_calc*r*longitud; dvpct=(dv/tension)*100; }
+        else if (sistema === 'bifasico') { dv = 2*I_calc*r*longitud; dvpct=(dv/(2*tension))*100; }
+        else { dv = 2*I_calc*r*longitud; dvpct=(dv/tension)*100; }
+        const imax2 = (material==='cu'?(esAire?row.icu_a:row.icu_d):(esAire?row.ial_a:row.ial_d));
+        if (imax2===0) continue;
+        if (dvpct <= limCaida && imax2*n*factorTotal >= I_calc) {
+          if (row.sec > seccionElegida || n > cablesPorFase) {
+            seccionCaida = row.sec; filaCaida = row; cablesCaida = n;
+            deltaVpctFinal = dvpct; ajustadoPorCaida = true;
+          }
+          break;
+        }
+      }
+      if (ajustadoPorCaida) break;
+    }
+  }
+
+  const secFinal = Math.max(seccionElegida, seccionCaida);
+  const filaFinal = secFinal === seccionCaida ? filaCaida : filaElegida;
+  const cablesFinal = secFinal === seccionCaida ? cablesCaida : cablesPorFase;
+  const rFinal = (material==='cu'?filaFinal.rcu:filaFinal.ral)/(cablesFinal*1000);
+
+  let dvFinal, dvpctFinal2;
+  if (sistema==='trifasico') { dvFinal=Math.sqrt(3)*I_calc*rFinal*longitud; dvpctFinal2=(dvFinal/tension)*100; }
+  else if (sistema==='bifasico') { dvFinal=2*I_calc*rFinal*longitud; dvpctFinal2=(dvFinal/(2*tension))*100; }
+  else { dvFinal=2*I_calc*rFinal*longitud; dvpctFinal2=(dvFinal/tension)*100; }
+
+  const imaxFinal = (material==='cu'?(esAire?filaFinal.icu_a:filaFinal.icu_d):(esAire?filaFinal.ial_a:filaFinal.ial_d)) * cablesFinal * factorTotal;
+  const cumpleTermico = imaxFinal >= I_calc;
+  const cumpleCaida = dvpctFinal2 <= limCaida;
+  const cumple = cumpleTermico && cumpleCaida;
+
+  // ── Configuración del alimentador
+  let conductoresPorFase, conductoresTotal, descripcionConfig;
+  if (sistema === 'trifasico') {
+    conductoresPorFase = cablesFinal;
+    conductoresTotal = cablesFinal * 3 + Math.ceil(cablesFinal * 0.5); // 3 fases + neutro reducido
+    const neutroDesc = cablesFinal > 1 ? `${Math.ceil(cablesFinal/2)} cable(s) neutro` : '1 cable neutro';
+    descripcionConfig = `${cablesFinal} cable(s)/fase × 3 fases + ${neutroDesc} + tierra`;
+  } else if (sistema === 'bifasico') {
+    conductoresPorFase = cablesFinal;
+    conductoresTotal = cablesFinal * 2 + cablesFinal; // 2 fases + neutro
+    descripcionConfig = `${cablesFinal} cable(s)/fase × 2 fases + ${cablesFinal} cable(s) neutro + tierra`;
+  } else {
+    conductoresPorFase = cablesFinal;
+    conductoresTotal = cablesFinal * 2;
+    descripcionConfig = `${cablesFinal} cable(s) fase + ${cablesFinal} cable(s) neutro + tierra`;
+  }
+
+  const secNeutro = sistema === 'trifasico' && secFinal > 16 ? secFinal / 2 : secFinal;
+  const secTierra = secFinal <= 16 ? secFinal : secFinal <= 35 ? 16 : secFinal / 2;
+
+  const radioData = calcRadioCurvatura(secFinal, montaje, sistema, cablesFinal);
+
+  // Estrés térmico (opcional — solo si el usuario llenó icc y tcc)
+  const iccKA   = parseFloat(document.getElementById('inp-icc').value);
+  const tiempoSeg = parseFloat(document.getElementById('inp-tcc').value);
+  const tInicial = parseFloat(document.getElementById('inp-t-inicial').value) || 75;
+  const tMax    = parseFloat(document.getElementById('inp-t-max').value) || 160;
+  const estresData = (!isNaN(iccKA) && iccKA > 0 && !isNaN(tiempoSeg) && tiempoSeg > 0)
+    ? calcEstresTérmico(secFinal, material, iccKA, tiempoSeg, null, tInicial, tMax)
+    : null;
+
+  mostrarResultado({
+    I_calc, I_req, sistema, material, tension, potencia, fp, fd, longitud,
+    secFinal, filaFinal, cablesFinal, imaxFinal, dvpctFinal: dvpctFinal2, dvFinal,
+    limCaida, cumple, cumpleTermico, cumpleCaida, ajustadoPorCaida,
+    factorTotal, ft, fg, fa, fc, msnm, nombreCan, esAire, esEnterrado,
+    descripcionConfig, secNeutro, secTierra, conductoresPorFase,
+    awg: filaFinal.awg, selCan: selCan.value,
+    tipoCargaNombre, tipoCircuitoNombre, montaje, radioData,
+    ajustadoPorMinimo, secMinRIC, estresData
+  });
+}
+
+function mostrarError(msg) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('result-content').style.display = 'block';
+  document.getElementById('result-content').innerHTML = `
+    <div style="padding:24px;background:var(--red-bg);border:1px solid var(--red-bdr);border-radius:var(--r);color:var(--red);font-family:var(--mono);font-size:13px;">
+      ✖ ${msg}
+    </div>`;
+}
+
+function fmt(n, dec=2) { return parseFloat(n.toFixed(dec)); }
+
+// ─── ESTRÉS TÉRMICO POR CORTOCIRCUITO ────────────────────────────────────────
+// Norma IEC 60949 / IEC 60364-5-54 / IEEE 80
+// Fórmula: S_min (mm²) = (Icc_A × √t) / K
+// K depende de material y tipo de aislación:
+//   Cu THW/PVC 75°C  → K=115   Cu XLPE 90°C → K=143
+//   Al THW/PVC 75°C  → K=74    Al XLPE 90°C → K=94
+// Factor de falla aplicado a Icc antes del cálculo:
+//   3F=1.00, 2F=0.87, 2FT=1.00, 1FT=0.58
+
+const K_CONST = {
+  cu_thw:  115,
+  cu_xlpe: 143,
+  al_thw:   74,
+  al_xlpe:  94,
+};
+
+function calcEstresTérmico(secMm2, material, iccKA, tiempoSeg, tipoFalla, tInicial, tMax) {
+  // Factor de tipo de falla
+  const selFalla = document.getElementById('sel-tipo-falla');
+  const opt = selFalla ? selFalla.options[selFalla.selectedIndex] : null;
+  const factorFalla = opt ? parseFloat(opt.dataset.factor) : 1.0;
+  const iccEfectivo = iccKA * 1000 * factorFalla; // A
+
+  // Selección de K: por defecto THW; si t_max > 200 asumir XLPE
+  const esXLPE = tMax >= 200;
+  const kKey   = (material === 'cu' ? 'cu_' : 'al_') + (esXLPE ? 'xlpe' : 'thw');
+  const K      = K_CONST[kKey];
+
+  // Fórmula IEC 60949
+  const secMinTermico = (iccEfectivo * Math.sqrt(tiempoSeg)) / K;
+
+  // También calcular Icc_max soportable por la sección actual
+  const iccMaxSoportado = (secMm2 * K) / Math.sqrt(tiempoSeg) / 1000; // kA
+
+  // Energía específica de la falla (I²t)
+  const I2t = Math.pow(iccEfectivo, 2) * tiempoSeg;
+
+  // Energía específica máxima admisible para la sección
+  const I2t_max = Math.pow(secMm2 * K, 2);
+
+  // Temperatura final estimada
+  // ΔT = (I²t) / (K² × S²) × (T_final_ref - T_inicial_ref) + T_inicial
+  // Simplificado: T_final = T_inicial + (I²t / (K × S)²) × (T_max_adm - T_ref)
+  const ratio = I2t / I2t_max; // ratio de saturación térmica (0→1 = límite)
+  const tFinalEstimada = tInicial + ratio * (tMax - tInicial);
+
+  const cumple = secMm2 >= secMinTermico;
+
+  return {
+    iccEfectivo: iccEfectivo / 1000, // kA
+    factorFalla,
+    tipoFalla: opt ? opt.text.split(' —')[0] : '',
+    K, esXLPE,
+    secMinTermico: Math.ceil(secMinTermico * 10) / 10,
+    iccMaxSoportado,
+    I2t, I2t_max,
+    ratio,
+    tFinalEstimada,
+    tMax,
+    cumple,
+  };
+}
+
+function mostrarResultado(r) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('result-content').style.display = 'block';
+
+  // Guardar para toggle mm²/AWG y edición manual
+  _secFinalMm2  = r.secFinal;
+  _awgFinal     = r.awg;
+  _unidadActual = 'mm2';
+  _lastCalcCtx  = r;  // guardar contexto completo
+
+  const sistemaNombre = { trifasico: 'Trifásico', bifasico: 'Bifásico', monofasico: 'Monofásico' }[r.sistema];
+  const matNombre = r.material === 'cu' ? 'Cobre (Cu)' : 'Aluminio (Al)';
+  _matFinal = matNombre;
+  const barPct = Math.min((r.dvpctFinal / r.limCaida) * 100, 110);
+  const barClass = r.dvpctFinal <= r.limCaida * 0.75 ? 'ok-bar' : r.dvpctFinal <= r.limCaida ? 'warn-bar' : 'fail-bar';
+  const limitePct = Math.min((r.limCaida / r.limCaida) * 100, 100);
+
+  let warnings = '';
+  if (r.ajustadoPorMinimo) {
+    warnings += `<div class="warn-box">Sección aumentada al mínimo normativo RIC Art. 5.3.1: ${r.secMinRIC} mm² para ${r.tipoCargaNombre}. El cálculo térmico daba una sección menor.</div>`;
+  }
+  if (r.ajustadoPorCaida) {
+    warnings += `<div class="warn-box">Sección aumentada de ${r.filaFinal.sec} mm² a ${r.secFinal} mm² por criterio caída de tensión (${fmt(r.dvpctFinal)}% > ${r.limCaida}% límite RIC).</div>`;
+  }
+  if (r.msnm > 1000) {
+    const reduccion = ((1 - r.fa) * 100).toFixed(0);
+    warnings += `<div class="warn-box">Altitud ${r.msnm} msnm: factor Fa = ${r.fa} aplicado — capacidad de corriente reducida ${reduccion}% respecto a nivel del mar (IEC 60364-5-52).</div>`;
+  }
+  if (r.esEnterrado) {
+    warnings += `<div class="warn-box">Instalación enterrada: verificar profundidad mínima según RIC Art. 5.4 y presencia de arena de relleno.</div>`;
+  }
+  if (r.modoManual) {
+    const diff = r.secFinal > r.secManualOriginal ? 'mayor' : r.secFinal < r.secManualOriginal ? 'menor' : 'igual';
+    const colorManual = (!r.cumpleTermico || !r.cumpleCaida) ? 'warn-box' : 'info-box';
+    warnings += `<div class="${colorManual}">Sección ingresada manualmente: ${r.secFinal} mm² (${r.awg}). Sección calculada original era ${r.secManualOriginal} mm².</div>`;
+  }
+  if (r.cablesFinal > 1) {
+    warnings += `<div class="info-box">Paralelo: todos los cables deben ser de igual longitud, material, sección y tipo (RIC Art. 5.3.2).</div>`;
+  }
+
+  const html = `
+    <div class="result-header">
+      <span class="result-title">${sistemaNombre} · ${r.tension}V · ${r.potencia} kW · ${r.longitud} m</span>
+      <span class="result-badge ${r.cumple ? 'badge-ok' : 'badge-err'}">${r.cumple ? '✓ Cumple RIC' : '✗ No cumple'}</span>
+    </div>
+
+    ${warnings}
+
+    <!-- TARJETAS PRINCIPALES -->
+    <div class="result-grid">
+      <div class="result-card highlight" id="card-seccion">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div class="rc-label" style="margin:0;">Sección del conductor</div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <div id="toggle-unidad" style="display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+              <button id="btn-mm2" onclick="setUnidadSec('mm2')" style="padding:2px 8px;font-family:var(--mono);font-size:10px;font-weight:600;border:none;background:var(--accent);color:#000;cursor:pointer;">mm²</button>
+              <button id="btn-awg" onclick="setUnidadSec('awg')" style="padding:2px 8px;font-family:var(--mono);font-size:10px;font-weight:500;border:none;background:transparent;color:var(--text3);cursor:pointer;">AWG</button>
+            </div>
+            <button onclick="activarEdicionSec()" id="btn-editar-sec" title="Editar sección manualmente" style="padding:2px 7px;font-family:var(--mono);font-size:10px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text3);cursor:pointer;">✎</button>
+          </div>
+        </div>
+
+        <!-- VISTA NORMAL -->
+        <div id="vista-sec-normal">
+          <div class="rc-value accent" id="val-seccion">${r.secFinal}<span class="rc-unit" id="unit-seccion">mm²</span></div>
+          <div class="rc-sub" id="sub-seccion">${r.awg} · ${matNombre}</div>
+        </div>
+
+        <!-- VISTA EDICIÓN (oculta por defecto) -->
+        <div id="vista-sec-edicion" style="display:none;">
+          <div id="sec-edit-mm2" style="display:block;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <select id="sel-sec-mm2" onchange="previewSecEdit()" style="flex:1;background:var(--bg3);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-family:var(--mono);font-size:18px;font-weight:600;padding:4px 8px;outline:none;">
+                <option value="1.5">1.5 mm²</option>
+                <option value="2.5">2.5 mm²</option>
+                <option value="4">4 mm²</option>
+                <option value="6">6 mm²</option>
+                <option value="10">10 mm²</option>
+                <option value="16">16 mm²</option>
+                <option value="25">25 mm²</option>
+                <option value="35">35 mm²</option>
+                <option value="50">50 mm²</option>
+                <option value="70">70 mm²</option>
+                <option value="95">95 mm²</option>
+                <option value="120">120 mm²</option>
+                <option value="150">150 mm²</option>
+                <option value="185">185 mm²</option>
+                <option value="240">240 mm²</option>
+                <option value="300">300 mm²</option>
+              </select>
+            </div>
+          </div>
+          <div id="sec-edit-awg" style="display:none;">
+            <select id="sel-sec-awg" onchange="previewSecEdit()" style="width:100%;background:var(--bg3);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-family:var(--mono);font-size:18px;font-weight:600;padding:4px 8px;outline:none;">
+              <option value="2.5">14 AWG — 2.5 mm²</option>
+              <option value="4">12 AWG — 4 mm²</option>
+              <option value="6">10 AWG — 6 mm²</option>
+              <option value="10">8 AWG — 10 mm²</option>
+              <option value="16">6 AWG — 16 mm²</option>
+              <option value="25">4 AWG — 25 mm²</option>
+              <option value="35">2 AWG — 35 mm²</option>
+              <option value="50">1/0 AWG — 50 mm²</option>
+              <option value="70">2/0 AWG — 70 mm²</option>
+              <option value="95">3/0 AWG — 95 mm²</option>
+              <option value="120">4/0 AWG — 120 mm²</option>
+              <option value="185">350 MCM — 185 mm²</option>
+              <option value="240">500 MCM — 240 mm²</option>
+              <option value="300">600 MCM — 300 mm²</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button onclick="aplicarSecManual()" style="flex:1;padding:6px;background:var(--accent);color:#000;border:none;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;">Recalcular ↵</button>
+            <button onclick="cancelarEdicionSec()" style="padding:6px 10px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:11px;cursor:pointer;">✕</button>
+          </div>
+          <div id="preview-sec-edit" style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:6px;min-height:16px;"></div>
+        </div>
+      </div>
+      <div class="result-card highlight">
+        <div class="rc-label">Cables por fase</div>
+        <div class="rc-value accent">${r.cablesFinal}<span class="rc-unit">cable${r.cablesFinal>1?'s':''}</span></div>
+        <div class="rc-sub">${r.cablesFinal > 1 ? 'Paralelo' : 'Simple'}</div>
+      </div>
+      <div class="result-card ${r.cumpleTermico ? 'ok-card' : 'err-card'}">
+        <div class="rc-label">Corriente de diseño</div>
+        <div class="rc-value ${r.cumpleTermico ? 'green' : 'red'}">${fmt(r.I_calc)}<span class="rc-unit">A</span></div>
+        <div class="rc-sub">I_max corregida: ${fmt(r.imaxFinal)} A</div>
+      </div>
+      <div class="result-card ${r.cumpleCaida ? 'ok-card' : 'err-card'}">
+        <div class="rc-label">Caída de tensión</div>
+        <div class="rc-value ${r.cumpleCaida ? 'green' : 'red'}">${fmt(r.dvpctFinal)}%<span class="rc-unit">/ ${r.limCaida}%</span></div>
+        <div class="rc-sub">${fmt(r.dvFinal)} V absolutos</div>
+      </div>
+    </div>
+
+    <!-- BARRA CAÍDA -->
+    <div class="detail-section">
+      <div class="detail-section-title">Margen caída de tensión</div>
+      <div class="caida-bar-wrap">
+        <div class="caida-bar-label">
+          <span>0%</span>
+          <span>Calculada: ${fmt(r.dvpctFinal)}% &nbsp;|&nbsp; Límite RIC: ${r.limCaida}%</span>
+          <span>${fmt(r.limCaida * 1.1)}%</span>
+        </div>
+        <div class="caida-bar-bg">
+          <div class="caida-bar-fill ${barClass}" style="width:${barPct}%"></div>
+          <div class="caida-limit-line" style="left:${limitePct}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIGURACIÓN ALIMENTADOR -->
+    <div class="config-box">
+      <strong>Configuración del alimentador</strong>
+      ${r.descripcionConfig}<br>
+      Tierra: 1 cable × ${r.secTierra} mm² (${r.material === 'cu' ? 'Cu' : 'Al'})<br>
+      Neutro: ${r.sistema === 'trifasico' && r.secFinal > 16 ? `${r.cablesFinal > 1 ? Math.ceil(r.cablesFinal/2) : 1} cable(s) × ${r.secNeutro} mm² (reducido RIC)` : `${r.cablesFinal} cable(s) × ${r.secNeutro} mm²`}
+    </div>
+
+    <!-- RADIO MÍNIMO DE CURVATURA -->
+    <div class="curv-box">
+      <strong>Radio mínimo de curvatura del cable</strong>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+        <span class="curv-value">${fmt(r.radioData.radio)}</span>
+        <span class="curv-unit">mm</span>
+        <span style="font-size:12px;color:var(--text3);margin-left:8px;">${fmt(r.radioData.radio/10)} cm &nbsp;/&nbsp; ${fmt(r.radioData.radio/1000,3)} m</span>
+      </div>
+      <div class="curv-grid">
+        <div class="curv-item">
+          <div class="curv-item-label">Diámetro ext.</div>
+          <div class="curv-item-val">${fmt(r.radioData.diametro)} mm</div>
+          <div class="curv-item-sub">${r.radioData.tipoConstructivo}</div>
+        </div>
+        <div class="curv-item">
+          <div class="curv-item-label">Factor aplicado</div>
+          <div class="curv-item-val">${r.radioData.factor}×</div>
+          <div class="curv-item-sub">${r.radioData.montaje === 'banco' ? 'Banco ducto' : r.radioData.montaje === 'oculto' ? 'Oculto/empotrado' : 'A la vista'}</div>
+        </div>
+        <div class="curv-item">
+          <div class="curv-item-label">Radio interno</div>
+          <div class="curv-item-val">${fmt(r.radioData.radioInterno)} mm</div>
+          <div class="curv-item-sub">Sin espesor cable</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text3);">${r.radioData.descripcionFactor} · NEC 300.34 / IEC 60364-5-52</div>
+    </div>
+
+    <!-- ESTRÉS TÉRMICO -->
+    ${r.estresData ? (() => {
+      const e = r.estresData;
+      const pct = Math.min(e.ratio * 100, 120);
+      const barCls = e.ratio <= 0.75 ? 'ok-bar' : e.ratio <= 1.0 ? 'warn-bar' : 'fail-bar';
+      const valCls = e.cumple ? 'ok' : 'fail';
+      const tCls   = e.tFinalEstimada <= e.tMax ? 'ok' : 'fail';
+      return `
+      <div class="estres-section">
+        <div class="estres-header">
+          Estrés térmico por cortocircuito
+          <span class="badge-falla">\${e.tipoFalla}</span>
+          <span class="badge-falla" style="margin-left:auto;\${e.cumple?'background:var(--green-bg);color:var(--green);border-color:var(--green-bdr)':'background:var(--red-bg);color:var(--red);border-color:var(--red-bdr)'}">\${e.cumple ? '✓ Cumple IEC 60949' : '✗ No cumple IEC 60949'}</span>
+        </div>
+        <div class="estres-grid">
+          <div class="estres-cell">
+            <div class="estres-cell-label">Icc efectiva</div>
+            <div class="estres-cell-val warn">\${fmt(e.iccEfectivo,2)}<span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:3px;">kA</span></div>
+            <div class="estres-cell-sub">Factor falla: \${e.factorFalla}×</div>
+          </div>
+          <div class="estres-cell">
+            <div class="estres-cell-label">Sección mínima térmica</div>
+            <div class="estres-cell-val \${valCls}">\${fmt(e.secMinTermico,1)}<span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:3px;">mm²</span></div>
+            <div class="estres-cell-sub">K = \${e.K} A·s½/mm²</div>
+          </div>
+          <div class="estres-cell">
+            <div class="estres-cell-label">Icc máx. soportada</div>
+            <div class="estres-cell-val ok">\${fmt(e.iccMaxSoportado,2)}<span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:3px;">kA</span></div>
+            <div class="estres-cell-sub">Con \${r.secFinal} mm² / \${r.awg}</div>
+          </div>
+          <div class="estres-cell">
+            <div class="estres-cell-label">Energía específica I²t</div>
+            <div class="estres-cell-val warn">\${(e.I2t/1e6).toFixed(2)}<span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:3px;">MA²s</span></div>
+            <div class="estres-cell-sub">Icc² × t</div>
+          </div>
+          <div class="estres-cell">
+            <div class="estres-cell-label">I²t máximo admisible</div>
+            <div class="estres-cell-val ok">\${(e.I2t_max/1e6).toFixed(2)}<span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:3px;">MA²s</span></div>
+            <div class="estres-cell-sub">(K × S)²</div>
+          </div>
+          <div class="estres-cell">
+            <div class="estres-cell-label">T° final estimada</div>
+            <div class="estres-cell-val \${tCls}">\${fmt(e.tFinalEstimada,0)}<span style="font-size:12px;font-weight:400;color:var(--text3);margin-left:3px;">°C</span></div>
+            <div class="estres-cell-sub">Máx. admisible: \${e.tMax}°C</div>
+          </div>
+        </div>
+        <div class="estres-barra-wrap">
+          <div class="estres-barra-label">
+            <span>0%</span>
+            <span>Saturación térmica: \${(e.ratio*100).toFixed(1)}% &nbsp;|&nbsp; Límite: 100%</span>
+            <span>120%</span>
+          </div>
+          <div class="estres-barra-bg">
+            <div class="estres-barra-fill \${barCls}" style="width:\${pct}%"></div>
+          </div>
+        </div>
+        <div class="estres-nota">
+          Norma: IEC 60949 / IEC 60364-5-54 · Fórmula: S_mín = (Icc × √t) / K<br>
+          \${e.esXLPE ? 'Aislación XLPE detectada (T°max ≥ 200°C)' : 'Aislación PVC/THW (T°max < 200°C)'} · Material: \${r.material === 'cu' ? 'Cobre' : 'Aluminio'} · K = \${e.K}
+        </div>
+      </div>
+      `;
+    })() : ''}
+
+    <!-- DETALLE TÉCNICO -->
+    <div class="detail-section">
+      <div class="detail-section-title">Memoria de cálculo</div>
+      <div class="detail-row"><span class="dr-key">Sistema</span><span class="dr-val">${sistemaNombre} — ${r.tension} V</span></div>
+      <div class="detail-row"><span class="dr-key">Tipo de circuito RIC</span><span class="dr-val warn">${r.tipoCircuitoNombre.split('—')[0].trim()}</span></div>
+      <div class="detail-row"><span class="dr-key">Tipo de carga</span><span class="dr-val">${r.tipoCargaNombre}</span></div>
+      <div class="detail-row"><span class="dr-key">Montaje canalización</span><span class="dr-val">${r.montaje === 'banco' ? 'Banco de ducto' : r.montaje === 'oculto' ? 'Oculto / empotrado' : 'A la vista'}</span></div>
+      <div class="detail-row"><span class="dr-key">Potencia de diseño</span><span class="dr-val">${r.potencia} kW · cos\u00a0\u03c6\u00a0=\u00a0${r.fp}</span></div>
+      <div class="detail-row"><span class="dr-key">Factor de demanda (Fd)</span><span class="dr-val warn">${r.fd}</span></div>
+      <div class="detail-row"><span class="dr-key">Corriente de diseño (I·Fd)</span><span class="dr-val">${fmt(r.I_calc)} A</span></div>
+      <div class="detail-row"><span class="dr-key">Corriente requerida (I/Fc)</span><span class="dr-val">${fmt(r.I_req)} A</span></div>
+      <div class="detail-row"><span class="dr-key">Factor temp. ambiente (Ft)</span><span class="dr-val">${r.ft}</span></div>
+      <div class="detail-row"><span class="dr-key">Factor agrupamiento (Fg)</span><span class="dr-val">${r.fg}</span></div>
+      <div class="detail-row"><span class="dr-key">Altitud instalación</span><span class="dr-val ${r.msnm > 1000 ? 'warn' : ''}">${r.msnm} msnm</span></div>
+      <div class="detail-row"><span class="dr-key">Factor altitud (Fa)</span><span class="dr-val ${r.fa < 1 ? 'warn' : ''}">${r.fa}${r.fa < 1 ? ' ⚠' : ' ✓'}</span></div>
+      <div class="detail-row"><span class="dr-key">Factor corrección total (Ft·Fg·Fa)</span><span class="dr-val warn">${fmt(r.factorTotal, 3)}</span></div>
+      <div class="detail-row"><span class="dr-key">Tipo de canalización</span><span class="dr-val">${r.nombreCan}</span></div>
+      <div class="detail-row"><span class="dr-key">Longitud del circuito</span><span class="dr-val">${r.longitud} m</span></div>
+      <div class="detail-row"><span class="dr-key">Sección elegida</span><span class="dr-val warn">${r.secFinal} mm² (${r.awg})</span></div>
+      <div class="detail-row"><span class="dr-key">Material</span><span class="dr-val">${matNombre}</span></div>
+      <div class="detail-row"><span class="dr-key">Cables por fase</span><span class="dr-val">${r.cablesFinal}</span></div>
+      <div class="detail-row"><span class="dr-key">I_max corregida disponible</span><span class="dr-val ${r.cumpleTermico?'ok':'fail'}">${fmt(r.imaxFinal)} A ${r.cumpleTermico ? '✓' : '✗'}</span></div>
+      <div class="detail-row"><span class="dr-key">Caída de tensión</span><span class="dr-val ${r.cumpleCaida?'ok':'fail'}">${fmt(r.dvpctFinal)}% (${fmt(r.dvFinal)} V) ${r.cumpleCaida ? '✓' : '✗'}</span></div>
+      <div class="detail-row"><span class="dr-key">Límite caída RIC</span><span class="dr-val">${r.limCaida}%</span></div>
+      <div class="detail-row"><span class="dr-key">Sección tierra (PE)</span><span class="dr-val">${r.secTierra} mm²</span></div>
+      <div class="detail-row"><span class="dr-key">Sección neutro</span><span class="dr-val">${r.secNeutro} mm²</span></div>
+    </div>
+
+    <div class="ric-ref">
+      Referencias normativas aplicadas:<br>
+      · NCh Elec 4/2003 (RIC) Art. 5.3 — Selección de conductores por capacidad de corriente<br>
+      · NCh Elec 4/2003 (RIC) Art. 5.5.4 — Límites de caída de tensión<br>
+      · NCh Elec 4/2003 (RIC) Art. 5.4 — Tipos de canalización e instalación<br>
+      · Factores de corrección: Tabla 5-3 (temperatura), Tabla 5-4 (agrupamiento)<br>
+      · Radio mínimo curvatura: NEC 300.34 / IEC 60364-5-52 / práctica RIC — factor según tipo de montaje<br>
+      · Corrección por altitud: IEC 60364-5-52 Tabla B.52.15 — aplica sobre 1000 msnm<br>
+      · Sección mínima: RIC NCh Elec 4/2003 Art. 5.3.1 — según tipo de circuito<br>
+      · Estrés térmico: IEC 60949 / IEC 60364-5-54 — S_mín = Icc×√t / K (K: Cu-THW=115, Cu-XLPE=143, Al-THW=74, Al-XLPE=94)
+    </div>
+  `;
+
+  document.getElementById('result-content').innerHTML = html;
+  // Resetear toggle a mm² después de cada cálculo
+  setTimeout(() => setUnidadSec('mm2'), 0);
+}
+</script>
+</body>
+</html>

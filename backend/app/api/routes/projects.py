@@ -1,0 +1,210 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from pydantic import BaseModel
+from typing import Optional
+import uuid
+
+from app.db.session import get_session
+from app.db.models import User, Project, Calculation
+from app.api.deps import get_current_user
+from app.engine.schemas import CalculatorInput
+from app.engine.calculator import calculate
+
+router = APIRouter()
+
+
+class ProjectCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    location: Optional[str] = None
+
+
+class ProjectOut(BaseModel):
+    id: str
+    name: str
+    description: Optional[str]
+    location: Optional[str]
+    created_at: str
+    calculation_count: int = 0
+
+
+class CalculationCreate(BaseModel):
+    name: Optional[str] = None
+    input_data: CalculatorInput
+
+
+class CalculationOut(BaseModel):
+    id: str
+    name: Optional[str]
+    sistema: str
+    tension_v: float
+    potencia_kw: float
+    seccion_mm2: float
+    cumple_ric: bool
+    created_at: str
+
+
+# ── Proyectos CRUD ────────────────────────────────────────────────────────────
+
+@router.get("", response_model=list[ProjectOut])
+async def list_projects(
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Project).where(Project.owner_id == current_user.id).order_by(Project.created_at.desc())
+    )
+    projects = result.scalars().all()
+    out = []
+    for p in projects:
+        calc_res = await db.execute(select(Calculation).where(Calculation.project_id == p.id))
+        count = len(calc_res.scalars().all())
+        out.append(ProjectOut(
+            id=str(p.id), name=p.name, description=p.description,
+            location=p.location, created_at=p.created_at.isoformat(), calculation_count=count,
+        ))
+    return out
+
+
+@router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
+async def create_project(
+    body: ProjectCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    project = Project(owner_id=current_user.id, **body.model_dump())
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+    return ProjectOut(
+        id=str(project.id), name=project.name, description=project.description,
+        location=project.location, created_at=project.created_at.isoformat(),
+    )
+
+
+@router.get("/{project_id}", response_model=ProjectOut)
+async def get_project(
+    project_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    p = result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    return ProjectOut(
+        id=str(p.id), name=p.name, description=p.description,
+        location=p.location, created_at=p.created_at.isoformat(),
+    )
+
+
+@router.put("/{project_id}", response_model=ProjectOut)
+async def update_project(
+    project_id: uuid.UUID,
+    body: ProjectCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    p = result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    for k, v in body.model_dump(exclude_none=True).items():
+        setattr(p, k, v)
+    await db.commit()
+    await db.refresh(p)
+    return ProjectOut(
+        id=str(p.id), name=p.name, description=p.description,
+        location=p.location, created_at=p.created_at.isoformat(),
+    )
+
+
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project(
+    project_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    p = result.scalar_one_or_none()
+    if not p:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    await db.delete(p)
+    await db.commit()
+
+
+# ── Cálculos dentro de un proyecto ────────────────────────────────────────────
+
+@router.get("/{project_id}/calculations", response_model=list[CalculationOut])
+async def list_calculations(
+    project_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    p_res = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    if not p_res.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    result = await db.execute(
+        select(Calculation).where(Calculation.project_id == project_id).order_by(Calculation.created_at.desc())
+    )
+    calcs = result.scalars().all()
+    return [
+        CalculationOut(
+            id=str(c.id), name=c.name, sistema=c.sistema,
+            tension_v=c.tension_v, potencia_kw=c.potencia_kw,
+            seccion_mm2=c.seccion_mm2, cumple_ric=c.cumple_ric,
+            created_at=c.created_at.isoformat(),
+        )
+        for c in calcs
+    ]
+
+
+@router.post("/{project_id}/calculations", response_model=CalculationOut, status_code=status.HTTP_201_CREATED)
+async def create_calculation(
+    project_id: uuid.UUID,
+    body: CalculationCreate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    p_res = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    if not p_res.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    try:
+        calc_result = calculate(body.input_data)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    calc = Calculation(
+        project_id=project_id,
+        name=body.name,
+        input_data=body.input_data.model_dump(),
+        result_data=calc_result.resultado.model_dump(),
+        sistema=body.input_data.sistema,
+        tension_v=body.input_data.tension_v,
+        potencia_kw=body.input_data.potencia_kw,
+        seccion_mm2=calc_result.resultado.seccion_mm2,
+        cumple_ric=calc_result.resultado.cumple,
+    )
+    db.add(calc)
+    await db.commit()
+    await db.refresh(calc)
+
+    return CalculationOut(
+        id=str(calc.id), name=calc.name, sistema=calc.sistema,
+        tension_v=calc.tension_v, potencia_kw=calc.potencia_kw,
+        seccion_mm2=calc.seccion_mm2, cumple_ric=calc.cumple_ric,
+        created_at=calc.created_at.isoformat(),
+    )
