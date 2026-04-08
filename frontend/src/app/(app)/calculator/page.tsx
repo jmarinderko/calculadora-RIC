@@ -4,7 +4,8 @@ import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultPanel } from '@/components/calculator/ResultPanel'
-import { calcConductor, saveCalculation, getProjects } from '@/lib/api'
+import { UnifilarDiagram } from '@/components/calculator/UnifilarDiagram'
+import { calcConductor, saveCalculation, getProjects, generateReport, downloadReportPdf } from '@/lib/api'
 import type { CalculatorInput, CalculatorResponse, Project } from '@/types'
 
 function CalculatorInner() {
@@ -119,6 +120,30 @@ function CalculatorInner() {
               } : undefined}
               onRecalculate={handleForceSection}
             />
+
+            {/* Diagrama unifilar */}
+            {lastInput && (
+              <div style={{
+                marginTop: '16px',
+                background: 'var(--bg2)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--r)',
+                padding: '16px',
+              }}>
+                <div style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: 'var(--text2)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '12px',
+                }}>
+                  Diagrama unifilar
+                </div>
+                <UnifilarDiagram result={result} input={lastInput} />
+              </div>
+            )}
 
             {/* Guardar en proyecto */}
             {projects.length > 0 && (
