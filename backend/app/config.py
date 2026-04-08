@@ -17,7 +17,10 @@ class Settings(BaseSettings):
     # Entorno
     environment: str = "development"
     log_level: str = "DEBUG"
-    backend_cors_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    backend_cors_origins: List[str] = [
+        "http://localhost:3000", "http://127.0.0.1:3000",
+        "http://localhost:3001", "http://127.0.0.1:3001",
+    ]
 
     # Servicios
     pdf_service_url: str = "http://pdf-service:9000"
