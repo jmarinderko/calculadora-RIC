@@ -114,3 +114,90 @@ export interface Calculation {
   cumple_ric: boolean
   created_at: string
 }
+
+// ── Tipos ERNC / FV ──────────────────────────────────────────────────────────
+
+export type ERNCTopologia = 'string_dc' | 'ac_inversor' | 'gd_red_bt' | 'baterias_dc'
+
+export interface ERNCStringDCInput {
+  potencia_wp: number
+  voc_stc_v: number
+  isc_stc_a: number
+  temp_min_c: number
+  temp_max_c: number
+  longitud_m: number
+  material: Material
+  en_ducto: boolean
+  noct_c: number
+  coef_voc_pct: number
+  limite_caida_pct?: number
+}
+
+export interface ERNCAcInversorInput {
+  potencia_kw: number
+  tension_v: number
+  sistema: 'trifasico' | 'monofasico'
+  cos_phi: number
+  longitud_m: number
+  material: Material
+  tipo_canalizacion: TipoCanalizacion
+  temp_ambiente_c: number
+  circuitos_agrupados: number
+  msnm: number
+  limite_caida_pct?: number
+}
+
+export interface ERNCGdRedBtInput {
+  potencia_kw: number
+  tension_v: number
+  sistema: 'trifasico' | 'monofasico'
+  cos_phi: number
+  longitud_m: number
+  material: Material
+  tipo_canalizacion: TipoCanalizacion
+  temp_ambiente_c: number
+  circuitos_agrupados: number
+  msnm: number
+  limite_caida_pct?: number
+  potencia_instalada_kw?: number
+  numero_fases_interconexion: number
+}
+
+export interface ERNCBateriasDCInput {
+  potencia_w: number
+  tension_banco_v: number
+  longitud_m: number
+  material: Material
+  en_ducto: boolean
+  temp_ambiente_c: number
+  limite_caida_pct?: number
+}
+
+export interface ERNCResult {
+  topologia: ERNCTopologia
+  seccion_mm2: number
+  material: string
+  tipo_cable: string
+  i_diseno_a: number
+  i_max_admisible_a: number
+  caida_pct: number
+  caida_v: number
+  limite_caida_pct: number
+  cumple_termico: boolean
+  cumple_caida: boolean
+  cumple: boolean
+  longitud_m: number
+  voc_max_v?: number
+  voc_min_v?: number
+  i_cortocircuito_diseno_a?: number
+  factor_temperatura?: number
+  advertencias: string[]
+  descripcion: string
+}
+
+export interface ERNCResponse {
+  ok: boolean
+  topologia: ERNCTopologia
+  resultado: ERNCResult
+  advertencias: string[]
+}

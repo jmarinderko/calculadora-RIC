@@ -1,6 +1,10 @@
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import type { CalculatorInput, CalculatorResponse, Project, Calculation } from '@/types'
+import type {
+  CalculatorInput, CalculatorResponse, Project, Calculation,
+  ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
+  ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
+} from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -31,6 +35,24 @@ export async function registerApi(email: string, password: string, full_name?: s
 
 export async function calcConductor(input: CalculatorInput): Promise<CalculatorResponse> {
   const res = await api.post<CalculatorResponse>('/api/calc/conductor', input)
+  return res.data
+}
+
+// ── ERNC / FV Calculator ──────────────────────────────────────────────────────
+
+type ERNCInputMap = {
+  string_dc:   ERNCStringDCInput
+  ac_inversor: ERNCAcInversorInput
+  gd_red_bt:   ERNCGdRedBtInput
+  baterias_dc: ERNCBateriasDCInput
+}
+
+export async function calcERNC<T extends ERNCTopologia>(
+  topologia: T,
+  datos: ERNCInputMap[T]
+): Promise<ERNCResponse> {
+  const body = { topologia, datos }
+  const res = await api.post<ERNCResponse>('/api/calc/ernc', body)
   return res.data
 }
 

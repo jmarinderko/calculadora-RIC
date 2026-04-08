@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.db.session import init_db
 from app.api.routes import health, auth, calc, projects
+from app.api.routes import calc_ernc
 
 
 @asynccontextmanager
@@ -35,3 +36,4 @@ app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(calc.router, prefix="/api/calc", tags=["calculator"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
+app.include_router(calc_ernc.router, prefix="/api/calc", tags=["calculator-ernc"])
