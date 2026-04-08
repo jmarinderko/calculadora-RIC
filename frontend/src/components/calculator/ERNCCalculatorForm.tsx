@@ -6,6 +6,7 @@ import type {
   ERNCGdRedBtInput,
   ERNCBateriasDCInput,
   ERNCTopologia,
+  TipoCanalizacion,
 } from '@/types'
 
 type ERNCInput = ERNCStringDCInput | ERNCAcInversorInput | ERNCGdRedBtInput | ERNCBateriasDCInput
@@ -121,7 +122,7 @@ export function ERNCCalculatorForm({ onSubmit, loading }: Props) {
         cos_phi:             parseFloat(cosPhiAC),
         longitud_m:          parseFloat(longitudAC),
         material:            materialAC,
-        tipo_canalizacion:   canalizAC,
+        tipo_canalizacion:   canalizAC as TipoCanalizacion,
         temp_ambiente_c:     parseInt(tempAC),
         circuitos_agrupados: parseInt(agrupAC),
         msnm:                parseFloat(msnmAC),
@@ -137,7 +138,7 @@ export function ERNCCalculatorForm({ onSubmit, loading }: Props) {
         cos_phi:                parseFloat(cosPhiGD),
         longitud_m:             parseFloat(longitudGD),
         material:               materialGD,
-        tipo_canalizacion:      canalizGD,
+        tipo_canalizacion:      canalizGD as TipoCanalizacion,
         temp_ambiente_c:        parseInt(tempGD),
         circuitos_agrupados:    parseInt(agrupGD),
         msnm:                   parseFloat(msnmGD),
