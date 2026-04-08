@@ -89,7 +89,7 @@ services:
     container_name: ric_pdf
     restart: unless-stopped
     ports:
-      - "9000:9000"
+      - "9001:9000"
     environment:
       NODE_ENV: production
       PORT: 9000
