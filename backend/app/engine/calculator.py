@@ -213,6 +213,12 @@ def calculate(inp: CalculatorInput) -> CalculatorResponse:
         if fila_min:
             fila_elegida = fila_min
             ajustado_por_minimo = True
+    elif fila_elegida.sec == sec_min_ric:
+        # Si la corriente de diseño es menor al 70% de la capacidad de la sección
+        # mínima, el mínimo normativo es el criterio vinculante (no la térmica)
+        imax_min = _get_imax(fila_elegida, inp.material, es_aire) * factor_total
+        if imax_min > 0 and i_req < imax_min * 0.7:
+            ajustado_por_minimo = True
 
     seccion_elegida = fila_elegida.sec
     r_cu = inp.material == "cu"
@@ -232,6 +238,8 @@ def calculate(inp: CalculatorInput) -> CalculatorResponse:
     if dv_pct > lim_caida:
         outer_break = False
         for row in TABLA_RIC:
+            if row.sec < seccion_elegida:  # solo secciones >= térmica
+                continue
             for n in range(cables_por_fase, 4):
                 r = (row.rcu if r_cu else row.ral) / (n * 1000)
                 _, dvpct_test = _calc_caida(inp.sistema, i_calc, r, inp.longitud_m, inp.tension_v)

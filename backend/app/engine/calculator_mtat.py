@@ -263,6 +263,11 @@ def calculate_mtat(inp: MtatInput) -> MtatResponse:
                 f"Sección aumentada al mínimo normativo para {nivel_info['label']}: "
                 f"{sec_min_nivel} mm² (IEC 60502-2)."
             )
+    elif fila_elegida.sec == sec_min_nivel and inp.seccion_forzada_mm2 is None:
+        # Mínimo normativo es vinculante si la corriente es menor al 70% de la capacidad
+        imax_min = get_ampacity_mtat(fila_elegida, inp.material, inp.tipo_instalacion) * factor_total
+        if imax_min > 0 and i_req < imax_min * 0.7:
+            ajustado_por_minimo = True
 
     # ── 5. Impedancia y caída de tensión ──────────────────────────────────────
     r_dc_20 = fila_elegida.rcu_dc if inp.material == "cu" else fila_elegida.ral_dc
