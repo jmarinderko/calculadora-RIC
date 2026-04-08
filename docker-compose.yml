@@ -77,7 +77,7 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev_nextauth_secret_change_in_prod}
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - backend
 
