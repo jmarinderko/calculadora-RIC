@@ -6,10 +6,22 @@ import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultPanel } from '@/components/calculator/ResultPanel'
 import { UnifilarDiagram } from '@/components/calculator/UnifilarDiagram'
 import { MTATCalculatorForm } from '@/components/calculator/MTATCalculatorForm'
-import { calcConductor, calcMtat, saveCalculation, getProjects, generateReport, downloadReportPdf } from '@/lib/api'
-import type { CalculatorInput, CalculatorResponse, MtatInput, MtatResponse, Project } from '@/types'
+import { ERNCCalculatorForm } from '@/components/calculator/ERNCCalculatorForm'
+import { ERNCResultPanel } from '@/components/calculator/ERNCResultPanel'
+import { calcConductor, calcMtat, calcERNC, saveCalculation, getProjects, generateReport, downloadReportPdf } from '@/lib/api'
+import type {
+  CalculatorInput, CalculatorResponse, MtatInput, MtatResponse, Project,
+  ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
+  ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
+} from '@/types'
 
-type CalcTab = 'bt' | 'mtat'
+type CalcTab = 'bt' | 'mtat' | 'ernc'
+
+type ERNCInputUnion =
+  | ERNCStringDCInput
+  | ERNCAcInversorInput
+  | ERNCGdRedBtInput
+  | ERNCBateriasDCInput
 
 // ── Tab BT (original) ─────────────────────────────────────────────────────────
 function CalculatorInner() {
@@ -336,6 +348,75 @@ function MTATTabInner() {
   )
 }
 
+// ── Tab ERNC/FV ───────────────────────────────────────────────────────────────
+function ERNCTabInner() {
+  const [result,  setResult]  = useState<ERNCResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState('')
+
+  const handleCalculate = useCallback(async (
+    topologia: ERNCTopologia,
+    datos: ERNCInputUnion
+  ) => {
+    setError('')
+    setResult(null)
+    setLoading(true)
+    try {
+      const res = await calcERNC(topologia, datos as never)
+      setResult(res)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al calcular ERNC'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div style={{
+        borderRight: '1px solid var(--border)',
+        padding: '24px',
+        overflowY: 'auto',
+        background: 'var(--bg2)',
+      }}>
+        <ERNCCalculatorForm onSubmit={handleCalculate} loading={loading} />
+      </div>
+      <div style={{ padding: '24px 32px', overflowY: 'auto' }}>
+        {!result && !loading && !error && (
+          <div className="empty-state">
+            <div className="empty-icon">☀</div>
+            <p>Seleccioná la topología e ingresá los parámetros</p>
+            <p style={{ fontSize: '11px', color: 'var(--text3)' }}>
+              IEC 60364-7-712 · IEC 62548 · NTCO SEC · EN 50618
+            </p>
+          </div>
+        )}
+        {loading && (
+          <div className="empty-state">
+            <div className="empty-icon" style={{ animation: 'none' }}>⏳</div>
+            <p>Calculando conductor ERNC…</p>
+          </div>
+        )}
+        {error && (
+          <div style={{
+            padding: '16px',
+            background: 'var(--red-bg)',
+            border: '1px solid var(--red-bdr)',
+            borderRadius: 'var(--r)',
+            color: 'var(--red)',
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: '13px',
+          }}>
+            ✖ {error}
+          </div>
+        )}
+        {result && <ERNCResultPanel response={result} />}
+      </div>
+    </div>
+  )
+}
+
 // ── Wrapper con tabs ───────────────────────────────────────────────────────────
 function CalculatorWithTabs() {
   const [tab, setTab] = useState<CalcTab>('bt')
@@ -368,10 +449,14 @@ function CalculatorWithTabs() {
         <button style={tabStyle(tab === 'mtat')} onClick={() => setTab('mtat')}>
           MT/AT — IEC 60502-2
         </button>
+        <button style={tabStyle(tab === 'ernc')} onClick={() => setTab('ernc')}>
+          ☀ ERNC / FV
+        </button>
       </div>
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {tab === 'bt' && <CalculatorInner />}
         {tab === 'mtat' && <MTATTabInner />}
+        {tab === 'ernc' && <ERNCTabInner />}
       </div>
     </div>
   )
