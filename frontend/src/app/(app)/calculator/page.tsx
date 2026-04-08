@@ -4,9 +4,14 @@ import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultPanel } from '@/components/calculator/ResultPanel'
-import { calcConductor, saveCalculation, getProjects } from '@/lib/api'
-import type { CalculatorInput, CalculatorResponse, Project } from '@/types'
+import { UnifilarDiagram } from '@/components/calculator/UnifilarDiagram'
+import { MTATCalculatorForm } from '@/components/calculator/MTATCalculatorForm'
+import { calcConductor, calcMtat, saveCalculation, getProjects, generateReport, downloadReportPdf } from '@/lib/api'
+import type { CalculatorInput, CalculatorResponse, MtatInput, MtatResponse, Project } from '@/types'
 
+type CalcTab = 'bt' | 'mtat'
+
+// ── Tab BT (original) ─────────────────────────────────────────────────────────
 function CalculatorInner() {
   const searchParams = useSearchParams()
   const preselectedProjectId = searchParams.get('project')
@@ -21,6 +26,9 @@ function CalculatorInner() {
   const [saveName,      setSaveName]      = useState('')
   const [saving,        setSaving]        = useState(false)
   const [savedMsg,      setSavedMsg]      = useState('')
+  const [savedCalcId,   setSavedCalcId]   = useState<string | null>(null)
+  const [pdfLoading,    setPdfLoading]    = useState(false)
+  const [pdfMsg,        setPdfMsg]        = useState('')
 
   useEffect(() => {
     getProjects().then(setProjects).catch(() => {})
@@ -31,6 +39,8 @@ function CalculatorInner() {
     setResult(null)
     setLastInput(input)
     setSavedMsg('')
+    setSavedCalcId(null)
+    setPdfMsg('')
     setLoading(true)
     try {
       const res = await calcConductor(input)
@@ -52,14 +62,33 @@ function CalculatorInner() {
     if (!result || !saveProjectId || !saveName.trim()) return
     setSaving(true)
     setSavedMsg('')
+    setSavedCalcId(null)
+    setPdfMsg('')
     try {
-      await saveCalculation(saveProjectId, saveName.trim(), lastInput!)
+      const saved = await saveCalculation(saveProjectId, saveName.trim(), lastInput!)
+      setSavedCalcId(saved.id)
       setSavedMsg('Cálculo guardado exitosamente.')
       setSaveName('')
     } catch {
       setSavedMsg('Error al guardar.')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDownloadPdf() {
+    if (!savedCalcId) return
+    setPdfLoading(true)
+    setPdfMsg('')
+    try {
+      const report = await generateReport(savedCalcId)
+      await downloadReportPdf(report.id, `memoria_calculo_RIC_${savedCalcId.slice(0, 8)}.pdf`)
+      setPdfMsg('PDF descargado.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al generar el PDF'
+      setPdfMsg(`Error: ${msg}`)
+    } finally {
+      setPdfLoading(false)
     }
   }
 
@@ -120,6 +149,30 @@ function CalculatorInner() {
               onRecalculate={handleForceSection}
             />
 
+            {/* Diagrama unifilar */}
+            {lastInput && (
+              <div style={{
+                marginTop: '16px',
+                background: 'var(--bg2)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--r)',
+                padding: '16px',
+              }}>
+                <div style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: 'var(--text2)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '12px',
+                }}>
+                  Diagrama unifilar
+                </div>
+                <UnifilarDiagram result={result} input={lastInput} />
+              </div>
+            )}
+
             {/* Guardar en proyecto */}
             {projects.length > 0 && (
               <div style={{
@@ -170,14 +223,44 @@ function CalculatorInner() {
                     {savedMsg}
                   </div>
                 )}
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !saveProjectId || !saveName.trim()}
-                  className="btn-calc"
-                  style={{ background: 'var(--blue)', marginTop: 0 }}
-                >
-                  {saving ? 'Guardando…' : '💾 Guardar cálculo'}
-                </button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving || !saveProjectId || !saveName.trim()}
+                    className="btn-calc"
+                    style={{ background: 'var(--blue)', marginTop: 0, flex: '1 1 auto' }}
+                  >
+                    {saving ? 'Guardando…' : '💾 Guardar cálculo'}
+                  </button>
+
+                  {savedCalcId && (
+                    <button
+                      onClick={handleDownloadPdf}
+                      disabled={pdfLoading}
+                      className="btn-calc"
+                      style={{
+                        background: 'var(--accent)',
+                        color: '#000',
+                        marginTop: 0,
+                        flex: '1 1 auto',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {pdfLoading ? 'Generando PDF…' : '⬇ Descargar PDF (SEC)'}
+                    </button>
+                  )}
+                </div>
+
+                {pdfMsg && (
+                  <div style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: '12px',
+                    marginTop: '8px',
+                    color: pdfMsg.startsWith('Error') ? 'var(--red)' : 'var(--green)',
+                  }}>
+                    {pdfMsg}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -187,16 +270,123 @@ function CalculatorInner() {
   )
 }
 
+// ── Tab MT/AT ─────────────────────────────────────────────────────────────────
+function MTATTabInner() {
+  const [result,  setResult]  = useState<MtatResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState('')
+
+  const handleCalculate = useCallback(async (input: MtatInput) => {
+    setError('')
+    setResult(null)
+    setLoading(true)
+    try {
+      const res = await calcMtat(input)
+      setResult(res)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al calcular'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '460px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div style={{
+        borderRight: '1px solid var(--border)',
+        padding: '24px',
+        overflowY: 'auto',
+        background: 'var(--bg2)',
+      }}>
+        <MTATCalculatorForm onSubmit={handleCalculate} loading={loading} result={null} />
+      </div>
+      <div style={{ padding: '24px 32px', overflowY: 'auto' }}>
+        {!result && !loading && !error && (
+          <div className="empty-state">
+            <div className="empty-icon">⚡</div>
+            <p>Ingresa los parámetros MT/AT y presiona calcular</p>
+            <p style={{ fontSize: '11px', color: 'var(--text3)' }}>IEC 60502-2 · IEC 60287 · IEC 60949 · 1–220 kV</p>
+          </div>
+        )}
+        {loading && (
+          <div className="empty-state">
+            <div className="empty-icon" style={{ animation: 'none' }}>⏳</div>
+            <p>Calculando…</p>
+          </div>
+        )}
+        {error && (
+          <div style={{
+            padding: '16px',
+            background: 'var(--red-bg)',
+            border: '1px solid var(--red-bdr)',
+            borderRadius: 'var(--r)',
+            color: 'var(--red)',
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: '13px',
+          }}>
+            ✖ {error}
+          </div>
+        )}
+        {result && (
+          <MTATCalculatorForm onSubmit={handleCalculate} loading={loading} result={result} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Wrapper con tabs ───────────────────────────────────────────────────────────
+function CalculatorWithTabs() {
+  const [tab, setTab] = useState<CalcTab>('bt')
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    padding: '8px 20px',
+    fontSize: '13px',
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: 'none',
+    borderBottom: active ? '2px solid var(--blue, #3b82f6)' : '2px solid transparent',
+    background: 'transparent',
+    color: active ? 'var(--text1)' : 'var(--text3)',
+    transition: 'color 0.15s, border-color 0.15s',
+  })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div style={{
+        display: 'flex',
+        borderBottom: '1px solid var(--border)',
+        padding: '0 24px',
+        background: 'var(--bg1)',
+        flexShrink: 0,
+      }}>
+        <button style={tabStyle(tab === 'bt')} onClick={() => setTab('bt')}>
+          BT — NCh Elec 4/2003
+        </button>
+        <button style={tabStyle(tab === 'mtat')} onClick={() => setTab('mtat')}>
+          MT/AT — IEC 60502-2
+        </button>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {tab === 'bt' && <CalculatorInner />}
+        {tab === 'mtat' && <MTATTabInner />}
+      </div>
+    </div>
+  )
+}
+
 export default function CalculatorPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <Header title="Calculadora RIC — NCh Elec 4/2003" />
+      <Header title="Calculadora de Conductores" />
       <Suspense fallback={
         <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontFamily: "'IBM Plex Mono', monospace" }}>
           Cargando…
         </div>
       }>
-        <CalculatorInner />
+        <CalculatorWithTabs />
       </Suspense>
     </div>
   )

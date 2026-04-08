@@ -1,6 +1,12 @@
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import type { CalculatorInput, CalculatorResponse, Project, Calculation } from '@/types'
+import type {
+  CalculatorInput, CalculatorResponse, CalculatorResult,
+  Project, Calculation,
+  MtatInput, MtatResponse,
+  ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
+  ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
+} from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -31,6 +37,29 @@ export async function registerApi(email: string, password: string, full_name?: s
 
 export async function calcConductor(input: CalculatorInput): Promise<CalculatorResponse> {
   const res = await api.post<CalculatorResponse>('/api/calc/conductor', input)
+  return res.data
+}
+
+export async function calcMtat(input: MtatInput): Promise<MtatResponse> {
+  const res = await api.post<MtatResponse>('/api/calc/mtat', input)
+  return res.data
+}
+
+// ── ERNC / FV Calculator ──────────────────────────────────────────────────────
+
+type ERNCInputMap = {
+  string_dc:   ERNCStringDCInput
+  ac_inversor: ERNCAcInversorInput
+  gd_red_bt:   ERNCGdRedBtInput
+  baterias_dc: ERNCBateriasDCInput
+}
+
+export async function calcERNC<T extends ERNCTopologia>(
+  topologia: T,
+  datos: ERNCInputMap[T]
+): Promise<ERNCResponse> {
+  const body = { topologia, datos }
+  const res = await api.post<ERNCResponse>('/api/calc/ernc', body)
   return res.data
 }
 
@@ -67,4 +96,60 @@ export async function saveCalculation(
 ): Promise<Calculation> {
   const res = await api.post<Calculation>(`/api/projects/${projectId}/calculations`, { name, input_data })
   return res.data
+}
+
+// ── Reports / PDF ─────────────────────────────────────────────────────────────
+
+export interface ReportOut {
+  id: string
+  calculation_id: string
+  created_at: string
+}
+
+export async function generateReport(calculationId: string): Promise<ReportOut> {
+  const res = await api.post<ReportOut>(`/api/reports/${calculationId}/generate`)
+  return res.data
+}
+
+/**
+ * Descarga el PDF de la memoria de cálculo y dispara el diálogo de guardado.
+ * Usa fetch directamente para manejar el blob binario.
+ */
+export async function downloadReportPdf(reportId: string, filename = 'memoria_calculo_RIC.pdf'): Promise<void> {
+  const session = await getSession()
+  const headers: Record<string, string> = {}
+  if ((session as any)?.accessToken) {
+    headers['Authorization'] = `Bearer ${(session as any).accessToken}`
+  }
+  const resp = await fetch(`${API_BASE}/api/reports/${reportId}/download`, { headers })
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }))
+    throw new Error((err as any).detail ?? 'Error al descargar el PDF')
+  }
+  const blob = await resp.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+// ── Unifilar ──────────────────────────────────────────────────────────────────
+
+/**
+ * Solicita el diagrama unifilar SVG generado desde el resultado del cálculo.
+ * Retorna el string SVG crudo (content-type: image/svg+xml).
+ */
+export async function getUnifilar(
+  resultado: CalculatorResult,
+  input_data: CalculatorInput
+): Promise<string> {
+  const res = await api.post('/api/unifilar/generate', { resultado, input_data }, {
+    responseType: 'text',
+    headers: { Accept: 'image/svg+xml' },
+  })
+  return res.data as string
 }
