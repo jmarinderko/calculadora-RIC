@@ -32,6 +32,7 @@ class UserOut(BaseModel):
     email: str
     full_name: str | None
     is_active: bool
+    is_admin: bool
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -71,4 +72,5 @@ async def me(current_user: User = Depends(get_current_user)):
         email=current_user.email,
         full_name=current_user.full_name,
         is_active=current_user.is_active,
+        is_admin=current_user.is_admin,
     )

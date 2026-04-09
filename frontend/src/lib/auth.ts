@@ -12,17 +12,27 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
         try {
-          const res = await fetch(
-            `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/auth/login`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: credentials.email, password: credentials.password }),
-            }
-          )
+          const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          const res = await fetch(`${backendUrl}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+          })
           if (!res.ok) return null
           const data = await res.json()
-          return { id: 'user', email: credentials.email, accessToken: data.access_token }
+
+          // Obtener is_admin desde /me
+          const meRes = await fetch(`${backendUrl}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${data.access_token}` },
+          })
+          const me = meRes.ok ? await meRes.json() : {}
+
+          return {
+            id: 'user',
+            email: credentials.email,
+            accessToken: data.access_token,
+            isAdmin: me.is_admin ?? false,
+          }
         } catch {
           return null
         }
@@ -32,13 +42,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.accessToken = (user as { accessToken?: string }).accessToken
+        token.accessToken = (user as any).accessToken
         token.email = user.email
+        token.isAdmin = (user as any).isAdmin ?? false
       }
       return token
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string
+      session.isAdmin = token.isAdmin as boolean
       return session
     },
   },
@@ -52,10 +64,12 @@ export const authOptions: NextAuthOptions = {
 declare module 'next-auth' {
   interface Session {
     accessToken?: string
+    isAdmin?: boolean
   }
 }
 declare module 'next-auth/jwt' {
   interface JWT {
     accessToken?: string
+    isAdmin?: boolean
   }
 }

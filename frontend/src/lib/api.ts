@@ -6,6 +6,7 @@ import type {
   MtatInput, MtatResponse,
   ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
   ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
+  AdminStats, AdminUser, Conductor,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -135,6 +136,42 @@ export async function downloadReportPdf(reportId: string, filename = 'memoria_ca
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export async function getAdminStats(): Promise<AdminStats> {
+  const res = await api.get<AdminStats>('/api/admin/stats')
+  return res.data
+}
+
+export async function getAdminUsers(skip = 0, limit = 50): Promise<AdminUser[]> {
+  const res = await api.get<AdminUser[]>('/api/admin/users', { params: { skip, limit } })
+  return res.data
+}
+
+export async function updateAdminUser(id: string, data: { is_active?: boolean; is_admin?: boolean }): Promise<AdminUser> {
+  const res = await api.patch<AdminUser>(`/api/admin/users/${id}`, data)
+  return res.data
+}
+
+export async function getAdminCatalog(filters?: { proveedor?: string; material?: string; activo?: boolean }): Promise<Conductor[]> {
+  const res = await api.get<Conductor[]>('/api/admin/catalog', { params: filters })
+  return res.data
+}
+
+export async function createConductor(data: Partial<Conductor>): Promise<Conductor> {
+  const res = await api.post<Conductor>('/api/admin/catalog', data)
+  return res.data
+}
+
+export async function updateConductor(id: string, data: Partial<Conductor>): Promise<Conductor> {
+  const res = await api.put<Conductor>(`/api/admin/catalog/${id}`, data)
+  return res.data
+}
+
+export async function deleteConductor(id: string): Promise<void> {
+  await api.delete(`/api/admin/catalog/${id}`)
 }
 
 // ── Unifilar ──────────────────────────────────────────────────────────────────

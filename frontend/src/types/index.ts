@@ -312,3 +312,43 @@ export interface ERNCResponse {
   advertencias: string[]
 }
 
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export interface AdminStats {
+  total_users: number
+  total_projects: number
+  total_calculations: number
+  calculations_today: number
+  calculations_week: number
+}
+
+export interface AdminUser {
+  id: string
+  email: string
+  full_name?: string
+  is_active: boolean
+  is_admin: boolean
+  created_at: string
+  project_count: number
+}
+
+export interface Conductor {
+  id: string
+  proveedor?: string
+  tipo?: string
+  calibre_awg?: string
+  seccion_mm2?: number
+  material?: string
+  resistencia_dc_20?: number
+  i_max_ducto?: number
+  i_max_aire?: number
+  diametro_ext_mm?: number
+  peso_kg_km?: number
+  tension_nom_v?: number
+  temp_max_c?: number
+  norma_ref?: string
+  certificacion_sec: boolean
+  activo: boolean
+  version_catalogo?: string
+}
+

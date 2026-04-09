@@ -22,3 +22,10 @@ async def get_current_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado o inactivo")
     return user
+
+
+async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Valida que el usuario autenticado sea administrador."""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Se requieren permisos de administrador")
+    return current_user

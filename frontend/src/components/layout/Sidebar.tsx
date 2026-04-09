@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
@@ -10,6 +11,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   return (
     <aside style={{
@@ -75,6 +77,35 @@ export function Sidebar() {
             </Link>
           )
         })}
+
+        {/* Admin link — solo visible para administradores */}
+        {(session as any)?.isAdmin && (
+          <>
+            <div style={{ height: 1, background: 'var(--border)', margin: '8px 4px' }} />
+            <Link
+              href="/admin"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 10px',
+                borderRadius: '4px',
+                fontSize: '13px',
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                color: pathname.startsWith('/admin') ? '#000' : 'var(--text3)',
+                background: pathname.startsWith('/admin') ? 'var(--accent)' : 'transparent',
+                fontWeight: pathname.startsWith('/admin') ? 600 : 400,
+                textDecoration: 'none',
+                transition: 'background 0.15s, color 0.15s',
+              }}
+              onMouseOver={e => { if (!pathname.startsWith('/admin')) { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.color = 'var(--text)'; } }}
+              onMouseOut={e => { if (!pathname.startsWith('/admin')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text3)'; } }}
+            >
+              <span style={{ fontSize: '14px' }}>⚙</span>
+              Admin
+            </Link>
+          </>
+        )}
       </nav>
 
       <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)' }}>
