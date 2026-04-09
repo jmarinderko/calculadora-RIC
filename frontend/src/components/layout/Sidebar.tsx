@@ -3,10 +3,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',  label: 'Dashboard',   icon: '⊞' },
+  { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
   { href: '/calculator', label: 'Calculadora', icon: '⚡' },
   { href: '/projects',   label: 'Proyectos',   icon: '⊟' },
-  { href: '/billing',    label: 'Plan',         icon: '◈' },
 ]
 
 export function Sidebar() {

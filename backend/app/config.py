@@ -25,12 +25,6 @@ class Settings(BaseSettings):
     # Servicios
     pdf_service_url: str = "http://pdf-service:9000"
 
-    # Stripe
-    stripe_secret_key: str = ""
-    stripe_webhook_secret: str = ""
-    stripe_price_pro: str = ""       # Price ID del plan Pro en Stripe
-    stripe_price_enterprise: str = "" # Price ID del plan Enterprise en Stripe
-
     class Config:
         env_file = ".env"
         case_sensitive = False

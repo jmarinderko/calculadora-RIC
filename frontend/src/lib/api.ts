@@ -6,7 +6,6 @@ import type {
   MtatInput, MtatResponse,
   ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
   ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
-  SubscriptionInfo,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -136,31 +135,6 @@ export async function downloadReportPdf(reportId: string, filename = 'memoria_ca
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
-}
-
-// ── Billing ───────────────────────────────────────────────────────────────────
-
-export async function getSubscription(): Promise<SubscriptionInfo> {
-  const res = await api.get<SubscriptionInfo>('/api/billing/subscription')
-  return res.data
-}
-
-export async function createCheckout(plan: 'pro' | 'enterprise'): Promise<string> {
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const res = await api.post<{ checkout_url: string }>('/api/billing/checkout', {
-    plan,
-    success_url: `${origin}/billing?success=1`,
-    cancel_url:  `${origin}/billing`,
-  })
-  return res.data.checkout_url
-}
-
-export async function createPortalSession(): Promise<string> {
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const res = await api.post<{ portal_url: string }>('/api/billing/portal', {
-    return_url: `${origin}/billing`,
-  })
-  return res.data.portal_url
 }
 
 // ── Unifilar ──────────────────────────────────────────────────────────────────
