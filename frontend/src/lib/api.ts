@@ -6,7 +6,7 @@ import type {
   MtatInput, MtatResponse,
   ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
   ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
-  AdminStats, AdminUser, Conductor,
+  AdminStats, AdminUser, Conductor, UsageCharts,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -142,6 +142,11 @@ export async function downloadReportPdf(reportId: string, filename = 'memoria_ca
 
 export async function getAdminStats(): Promise<AdminStats> {
   const res = await api.get<AdminStats>('/api/admin/stats')
+  return res.data
+}
+
+export async function getAdminCharts(): Promise<UsageCharts> {
+  const res = await api.get<UsageCharts>('/api/admin/charts')
   return res.data
 }
 

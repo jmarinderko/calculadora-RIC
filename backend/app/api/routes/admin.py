@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import select, func, desc, cast, Date
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone, timedelta
@@ -22,6 +21,17 @@ class AdminStats(BaseModel):
     total_calculations: int
     calculations_today: int
     calculations_week: int
+
+
+class DailyCount(BaseModel):
+    date: str   # YYYY-MM-DD
+    count: int
+
+
+class UsageCharts(BaseModel):
+    calcs_last_14d: list[DailyCount]
+    users_last_14d: list[DailyCount]
+    calcs_by_sistema: dict[str, int]
 
 
 class AdminUser(BaseModel):
@@ -105,6 +115,55 @@ async def get_stats(
         total_calculations=total_calcs,
         calculations_today=calcs_today,
         calculations_week=calcs_week,
+    )
+
+
+# ── Charts ───────────────────────────────────────────────────────────────────
+
+@router.get("/charts", response_model=UsageCharts)
+async def get_charts(
+    db: AsyncSession = Depends(get_session),
+    _: User = Depends(get_current_admin),
+):
+    now = datetime.now(timezone.utc)
+    since_14d = now - timedelta(days=13)
+
+    # Cálculos por día (últimos 14 días)
+    calcs_rows = await db.execute(
+        select(cast(Calculation.created_at, Date).label("day"), func.count().label("cnt"))
+        .where(Calculation.created_at >= since_14d)
+        .group_by("day")
+        .order_by("day")
+    )
+    calcs_by_day = {str(r.day): r.cnt for r in calcs_rows.all()}
+
+    # Usuarios registrados por día (últimos 14 días)
+    users_rows = await db.execute(
+        select(cast(User.created_at, Date).label("day"), func.count().label("cnt"))
+        .where(User.created_at >= since_14d)
+        .group_by("day")
+        .order_by("day")
+    )
+    users_by_day = {str(r.day): r.cnt for r in users_rows.all()}
+
+    # Rellenar días sin datos
+    calcs_series, users_series = [], []
+    for i in range(14):
+        day = (now - timedelta(days=13 - i)).strftime("%Y-%m-%d")
+        calcs_series.append(DailyCount(date=day, count=calcs_by_day.get(day, 0)))
+        users_series.append(DailyCount(date=day, count=users_by_day.get(day, 0)))
+
+    # Cálculos por tipo de sistema
+    sistema_rows = await db.execute(
+        select(Calculation.sistema, func.count().label("cnt"))
+        .group_by(Calculation.sistema)
+    )
+    by_sistema = {r.sistema: r.cnt for r in sistema_rows.all()}
+
+    return UsageCharts(
+        calcs_last_14d=calcs_series,
+        users_last_14d=users_series,
+        calcs_by_sistema=by_sistema,
     )
 
 

@@ -322,6 +322,17 @@ export interface AdminStats {
   calculations_week: number
 }
 
+export interface DailyCount {
+  date: string
+  count: number
+}
+
+export interface UsageCharts {
+  calcs_last_14d: DailyCount[]
+  users_last_14d: DailyCount[]
+  calcs_by_sistema: Record<string, number>
+}
+
 export interface AdminUser {
   id: string
   email: string

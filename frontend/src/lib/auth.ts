@@ -21,17 +21,11 @@ export const authOptions: NextAuthOptions = {
           if (!res.ok) return null
           const data = await res.json()
 
-          // Obtener is_admin desde /me
-          const meRes = await fetch(`${backendUrl}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${data.access_token}` },
-          })
-          const me = meRes.ok ? await meRes.json() : {}
-
           return {
             id: 'user',
             email: credentials.email,
             accessToken: data.access_token,
-            isAdmin: me.is_admin ?? false,
+            isAdmin: data.is_admin ?? false,
           }
         } catch {
           return null

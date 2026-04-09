@@ -25,6 +25,7 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    is_admin: bool = False
 
 
 class UserOut(BaseModel):
@@ -62,7 +63,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_session)):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
     token = create_access_token(str(user.id))
-    return TokenResponse(access_token=token)
+    return TokenResponse(access_token=token, is_admin=user.is_admin)
 
 
 @router.get("/me", response_model=UserOut)
