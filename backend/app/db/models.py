@@ -26,6 +26,12 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
+    # Billing
+    plan_type: Mapped[str] = mapped_column(String(20), default="free")  # free | pro | enterprise
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(String(100), unique=True, nullable=True)
+    stripe_subscription_id: Mapped[Optional[str]] = mapped_column(String(100), unique=True, nullable=True)
+    subscription_status: Mapped[str] = mapped_column(String(30), default="inactive")  # active | inactive | past_due | canceled
+
     projects: Mapped[list["Project"]] = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
 
 

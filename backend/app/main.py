@@ -7,6 +7,7 @@ from app.db.session import init_db
 from app.api.routes import health, auth, calc, projects, unifilar, reports
 from app.api.routes import calc_mtat
 from app.api.routes import calc_ernc
+from app.api.routes import billing
 
 
 @asynccontextmanager
@@ -41,3 +42,4 @@ app.include_router(calc_mtat.router, prefix="/api/calc", tags=["calculator-mtat"
 app.include_router(calc_ernc.router, prefix="/api/calc", tags=["calculator-ernc"])
 app.include_router(unifilar.router, prefix="/api/unifilar", tags=["unifilar"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
+app.include_router(billing.router, prefix="/api/billing", tags=["billing"])

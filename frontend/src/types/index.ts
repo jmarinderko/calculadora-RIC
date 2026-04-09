@@ -311,3 +311,22 @@ export interface ERNCResponse {
   resultado: ERNCResult
   advertencias: string[]
 }
+
+// ── Billing / Subscription ────────────────────────────────────────────────────
+
+export type PlanType = 'free' | 'pro' | 'enterprise'
+export type SubscriptionStatus = 'active' | 'inactive' | 'past_due' | 'canceled' | 'trialing'
+
+export interface PlanLimits {
+  projects: number | null   // null = ilimitado
+  pdf: boolean
+  historial_dias: number | null  // null = ilimitado
+  usuarios: number
+}
+
+export interface SubscriptionInfo {
+  plan_type: PlanType
+  subscription_status: SubscriptionStatus
+  stripe_customer_id: string | null
+  limits: PlanLimits
+}
