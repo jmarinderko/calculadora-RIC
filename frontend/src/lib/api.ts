@@ -9,6 +9,7 @@ import type {
   AdminStats, AdminUser, Conductor, UsageCharts,
   UserProfile, ProfileUpdate, ShareResponse, PublicCalculation,
   DemandaSummary,
+  ProjectTemplate,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -283,4 +284,15 @@ export async function getUnifilar(
     headers: { Accept: 'image/svg+xml' },
   })
   return res.data as string
+}
+
+// ── Plantillas de Proyecto ────────────────────────────────────────────────────
+
+export async function getTemplates(): Promise<ProjectTemplate[]> {
+  const res = await api.get<ProjectTemplate[]>('/api/templates')
+  return res.data
+}
+
+export async function applyTemplate(project_id: string, template_id: string): Promise<void> {
+  await api.post('/api/templates/apply', { project_id, template_id })
 }

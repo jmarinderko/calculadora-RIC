@@ -12,6 +12,7 @@ from app.api.routes import calc_mtat
 from app.api.routes import calc_ernc
 from app.api.routes import admin
 from app.api.routes import profile, share, exports
+from app.api.routes import templates
 
 
 @asynccontextmanager
@@ -83,3 +84,4 @@ app.include_router(profile.router, prefix="/api/users/profile", tags=["profile"]
 app.include_router(share.router, prefix="/api/calculations", tags=["share"])
 app.include_router(share.router, prefix="/api/share", tags=["share-public"])
 app.include_router(exports.router, prefix="/api/exports", tags=["exports"])
+app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
