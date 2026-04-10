@@ -450,6 +450,85 @@ export function ResultPanel({ result, input, onRecalculate }: Props) {
         )
       })()}
 
+      {/* ── PROTECCIONES ── */}
+      {r.proteccion && (() => {
+        const p = r.proteccion!
+        const tm = p.termomagnetico
+        const diff = p.diferencial
+        return (
+          <div className="estres-section">
+            <div className="estres-header">
+              Protección recomendada — RIC Art. 4.4
+              <span className="badge-falla" style={{
+                marginLeft: 'auto',
+                background: p.cumple ? 'var(--green-bg)' : 'var(--red-bg)',
+                color: p.cumple ? 'var(--green)' : 'var(--red)',
+                borderColor: p.cumple ? 'var(--green-bdr)' : 'var(--red-bdr)',
+              }}>
+                {p.cumple ? '✓ Cumple Ib ≤ In ≤ Iz' : '✗ No cumple RIC 4.4'}
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '12px 14px' }}>
+              {/* Termomagnético */}
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text3)', marginBottom: '8px' }}>
+                  Termomagnético
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'monospace', color: tm.cumple_ric ? 'var(--green)' : 'var(--red)', marginBottom: '4px' }}>
+                  {tm.in_a}A curva {tm.curva}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text2)', marginBottom: '8px' }}>
+                  {tm.tipo} · Icu {tm.icu_ka} kA
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--text3)', borderTop: '1px solid var(--border)', paddingTop: '6px' }}>
+                  {Object.entries(p.verificacion_ric).map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
+                      <span>{k}</span>
+                      <span style={{ fontFamily: 'monospace', color: v.includes('✗') ? 'var(--red)' : v.includes('✓') ? 'var(--green)' : 'var(--text)' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+                {tm.advertencias.length > 0 && (
+                  <div style={{ marginTop: '6px', fontSize: '10px', color: '#e36209', background: '#fff8c5', borderRadius: '4px', padding: '6px 8px' }}>
+                    {tm.advertencias.map((a, i) => <div key={i}>⚠ {a}</div>)}
+                  </div>
+                )}
+              </div>
+
+              {/* Diferencial */}
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text3)', marginBottom: '8px' }}>
+                  Diferencial (RCD)
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent)', marginBottom: '4px' }}>
+                  {diff.in_a}A · {diff.i_delta_n_ma}mA
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text2)', marginBottom: '8px' }}>
+                  {diff.num_polos}P tipo {diff.tipo_rcd} — IEC 61008
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--text3)', borderTop: '1px solid var(--border)', paddingTop: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Sensibilidad</span><span style={{ fontFamily: 'monospace' }}>{diff.i_delta_n_ma} mA</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Polos</span><span style={{ fontFamily: 'monospace' }}>{diff.num_polos}P</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Tipo RCD</span><span style={{ fontFamily: 'monospace' }}>{diff.tipo_rcd}</span></div>
+                </div>
+                {diff.advertencias.length > 0 && (
+                  <div style={{ marginTop: '6px', fontSize: '10px', color: '#e36209', background: '#fff8c5', borderRadius: '4px', padding: '6px 8px' }}>
+                    {diff.advertencias.map((a, i) => <div key={i}>⚠ {a}</div>)}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="estres-nota">
+              Condición RIC Art. 4.4: Ib ≤ In ≤ Iz — Ib = corriente de diseño · In = calibre termomagnético · Iz = corriente máx. corregida del conductor<br />
+              Curva B: 3–5×In (iluminación/resistivo) · Curva C: 5–10×In (general) · Curva D: 10–20×In (motores)<br />
+              Diferencial tipo AC: falta sinusoidal · Tipo A: falta con componente DC (motores VFD, inversores) — IEC 61008 / IEC 61009
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── MEMORIA DE CÁLCULO ── */}
       <div className="detail-section">
         <div className="detail-section-title">Memoria de cálculo</div>

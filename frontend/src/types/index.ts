@@ -83,6 +83,7 @@ export interface CalculatorResult {
   descripcion_config: string
   radio_curvatura: RadioCurvatura
   estres_termico: EstresTermico | null
+  proteccion: ProteccionRecomendada | null
   ajustado_por_minimo: boolean
   ajustado_por_caida: boolean
   sec_min_ric_mm2: number
@@ -341,6 +342,66 @@ export interface AdminUser {
   is_admin: boolean
   created_at: string
   project_count: number
+}
+
+// ── Protections ──────────────────────────────────────────────────────────────
+
+export interface TermomagneticoRecomendado {
+  in_a: number
+  curva: string
+  icu_ka: number
+  tipo: string
+  descripcion: string
+  cumple_ric: boolean
+  advertencias: string[]
+}
+
+export interface DiferencialRecomendado {
+  in_a: number
+  i_delta_n_ma: number
+  tipo_rcd: string
+  num_polos: number
+  descripcion: string
+  advertencias: string[]
+}
+
+export interface ProteccionRecomendada {
+  termomagnetico: TermomagneticoRecomendado
+  diferencial: DiferencialRecomendado
+  verificacion_ric: Record<string, string>
+  cumple: boolean
+}
+
+// ── Demand Summary ────────────────────────────────────────────────────────────
+
+export interface CircuitoResumen {
+  nombre?: string
+  sistema: string
+  tension_v: number
+  potencia_kw: number
+  demanda_kw: number
+  potencia_kva: number
+  i_diseno_a: number
+  seccion_mm2: number
+  cumple_ric: boolean
+}
+
+export interface DemandaSummary {
+  proyecto_id: string
+  proyecto_nombre: string
+  total_circuitos: number
+  circuitos_cumplen: number
+  tasa_cumplimiento_pct: number
+  potencia_instalada_kw: number
+  demanda_maxima_kw: number
+  demanda_maxima_kva: number
+  factor_potencia_promedio: number
+  corriente_empalme_a: number
+  tension_empalme_v: number
+  sistema_predominante: string
+  seccion_max_mm2: number
+  seccion_promedio_mm2: number
+  circuitos: CircuitoResumen[]
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────

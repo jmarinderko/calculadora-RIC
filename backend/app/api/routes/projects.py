@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, case
 from pydantic import BaseModel
 from typing import Optional
+import math
 import uuid
 
 from app.db.session import get_session
@@ -43,6 +44,40 @@ class CalculationOut(BaseModel):
     seccion_mm2: float
     cumple_ric: bool
     created_at: str
+
+
+class CircuitoResumen(BaseModel):
+    nombre: Optional[str]
+    sistema: str
+    tension_v: float
+    potencia_kw: float
+    demanda_kw: float       # potencia_kw × factor_demanda
+    potencia_kva: float
+    i_diseno_a: float
+    seccion_mm2: float
+    cumple_ric: bool
+
+
+class DemandaSummaryOut(BaseModel):
+    proyecto_id: str
+    proyecto_nombre: str
+    total_circuitos: int
+    circuitos_cumplen: int
+    tasa_cumplimiento_pct: float
+    # Potencias
+    potencia_instalada_kw: float
+    demanda_maxima_kw: float
+    demanda_maxima_kva: float
+    factor_potencia_promedio: float
+    # Empalme
+    corriente_empalme_a: float
+    tension_empalme_v: float
+    sistema_predominante: str
+    # Secciones
+    seccion_max_mm2: float
+    seccion_promedio_mm2: float
+    # Circuitos
+    circuitos: list[CircuitoResumen]
 
 
 # ── Proyectos CRUD ────────────────────────────────────────────────────────────
@@ -138,6 +173,116 @@ async def delete_project(
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     await db.delete(p)
     await db.commit()
+
+
+# ── Demanda máxima del proyecto ───────────────────────────────────────────────
+
+@router.get("/{project_id}/demand-summary", response_model=DemandaSummaryOut)
+async def get_demand_summary(
+    project_id: uuid.UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Calcula la demanda máxima del proyecto a partir de todos sus circuitos guardados.
+    Útil para dimensionar el empalme y solicitar potencia a la distribuidora.
+    """
+    p_res = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    proyecto = p_res.scalar_one_or_none()
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    calcs_res = await db.execute(
+        select(Calculation).where(Calculation.project_id == project_id).order_by(Calculation.created_at)
+    )
+    calcs = calcs_res.scalars().all()
+
+    if not calcs:
+        return DemandaSummaryOut(
+            proyecto_id=str(project_id), proyecto_nombre=proyecto.name,
+            total_circuitos=0, circuitos_cumplen=0, tasa_cumplimiento_pct=0.0,
+            potencia_instalada_kw=0.0, demanda_maxima_kw=0.0, demanda_maxima_kva=0.0,
+            factor_potencia_promedio=0.0, corriente_empalme_a=0.0,
+            tension_empalme_v=0.0, sistema_predominante="monofasico",
+            seccion_max_mm2=0.0, seccion_promedio_mm2=0.0, circuitos=[],
+        )
+
+    circuitos_out: list[CircuitoResumen] = []
+    potencia_instalada = 0.0
+    demanda_total = 0.0
+    sum_fp = 0.0
+    sum_kva = 0.0
+    cumplen = 0
+    sistemas: dict[str, int] = {}
+
+    for c in calcs:
+        inp = c.input_data or {}
+        res = c.result_data or {}
+        fp = float(inp.get("factor_potencia", 0.85))
+        fd = float(inp.get("factor_demanda", 1.0))
+        potencia = float(c.potencia_kw)
+        demanda = potencia * fd
+        kva = demanda / fp if fp > 0 else demanda
+        i_diseno = float(res.get("i_diseno_a", 0.0))
+
+        potencia_instalada += potencia
+        demanda_total += demanda
+        sum_kva += kva
+        sum_fp += fp
+        if c.cumple_ric:
+            cumplen += 1
+
+        sistema = c.sistema or "monofasico"
+        sistemas[sistema] = sistemas.get(sistema, 0) + 1
+
+        circuitos_out.append(CircuitoResumen(
+            nombre=c.name,
+            sistema=sistema,
+            tension_v=c.tension_v,
+            potencia_kw=potencia,
+            demanda_kw=round(demanda, 3),
+            potencia_kva=round(kva, 3),
+            i_diseno_a=round(i_diseno, 3),
+            seccion_mm2=c.seccion_mm2,
+            cumple_ric=c.cumple_ric,
+        ))
+
+    total = len(calcs)
+    fp_prom = sum_fp / total if total > 0 else 0.85
+    sistema_pred = max(sistemas, key=lambda k: sistemas[k]) if sistemas else "monofasico"
+
+    # Tensión y corriente de empalme: usar la tensión más frecuente
+    tensiones = [float(c.tension_v) for c in calcs]
+    tension_empalme = max(set(tensiones), key=lambda t: tensiones.count(t))
+
+    if sistema_pred == "trifasico":
+        i_empalme = sum_kva * 1000 / (math.sqrt(3) * tension_empalme) if tension_empalme > 0 else 0.0
+    elif sistema_pred == "bifasico":
+        i_empalme = sum_kva * 1000 / (2 * tension_empalme) if tension_empalme > 0 else 0.0
+    else:
+        i_empalme = sum_kva * 1000 / tension_empalme if tension_empalme > 0 else 0.0
+
+    secciones = [c.seccion_mm2 for c in calcs]
+
+    return DemandaSummaryOut(
+        proyecto_id=str(project_id),
+        proyecto_nombre=proyecto.name,
+        total_circuitos=total,
+        circuitos_cumplen=cumplen,
+        tasa_cumplimiento_pct=round(cumplen / total * 100, 1) if total > 0 else 0.0,
+        potencia_instalada_kw=round(potencia_instalada, 3),
+        demanda_maxima_kw=round(demanda_total, 3),
+        demanda_maxima_kva=round(sum_kva, 3),
+        factor_potencia_promedio=round(fp_prom, 3),
+        corriente_empalme_a=round(i_empalme, 2),
+        tension_empalme_v=tension_empalme,
+        sistema_predominante=sistema_pred,
+        seccion_max_mm2=max(secciones),
+        seccion_promedio_mm2=round(sum(secciones) / len(secciones), 2),
+        circuitos=circuitos_out,
+    )
 
 
 # ── Cálculos dentro de un proyecto ────────────────────────────────────────────

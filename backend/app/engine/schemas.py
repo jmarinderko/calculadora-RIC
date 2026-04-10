@@ -1,6 +1,7 @@
 """Pydantic schemas para el motor de cálculo RIC."""
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
+from app.engine.protection_selector import ProteccionRecomendada  # noqa: F401 re-export
 
 
 class CalculatorInput(BaseModel):
@@ -93,6 +94,7 @@ class CalculatorResult(BaseModel):
     descripcion_config: str
     radio_curvatura: RadioCurvatura
     estres_termico: Optional[EstresTermico] = None
+    proteccion: Optional[ProteccionRecomendada] = None
     ajustado_por_minimo: bool = False
     ajustado_por_caida: bool = False
     sec_min_ric_mm2: float

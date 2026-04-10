@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
-import { getProjects, getCalculations, shareCalculation, exportXlsx } from '@/lib/api'
-import type { Project, Calculation } from '@/types'
+import { getProjects, getCalculations, shareCalculation, exportXlsx, getDemandSummary, downloadSecMemory } from '@/lib/api'
+import type { Project, Calculation, DemandaSummary } from '@/types'
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -12,6 +12,10 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [calculations, setCalculations] = useState<Calculation[]>([])
   const [loading, setLoading] = useState(true)
+  const [demand, setDemand] = useState<DemandaSummary | null>(null)
+  const [showDemand, setShowDemand] = useState(false)
+  const [loadingDemand, setLoadingDemand] = useState(false)
+  const [generatingMemoria, setGeneratingMemoria] = useState(false)
   const [actionMsg, setActionMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -74,8 +78,42 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Ir a calculadora */}
-        <div className="flex justify-end">
+        {/* Acciones del proyecto */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (demand) { setShowDemand(v => !v); return }
+                setLoadingDemand(true)
+                try {
+                  const d = await getDemandSummary(id)
+                  setDemand(d)
+                  setShowDemand(true)
+                } catch { setActionMsg('Error al cargar demanda.'); setTimeout(() => setActionMsg(null), 3000) }
+                finally { setLoadingDemand(false) }
+              }}
+              className="flex items-center gap-1.5 bg-[#21262D] hover:bg-[#30363D] text-[#E6EDF3] text-sm font-medium px-3 py-1.5 rounded border border-[#30363D] transition-colors"
+            >
+              {loadingDemand ? '…' : showDemand ? '▲ Ocultar demanda' : '⚡ Ver demanda'}
+            </button>
+            {calculations.length > 0 && (
+              <button
+                onClick={async () => {
+                  setGeneratingMemoria(true)
+                  try {
+                    await downloadSecMemory(id, project!.name)
+                  } catch (e: any) {
+                    setActionMsg(e.message || 'Error al generar Memoria Técnica.')
+                    setTimeout(() => setActionMsg(null), 4000)
+                  } finally { setGeneratingMemoria(false) }
+                }}
+                disabled={generatingMemoria}
+                className="flex items-center gap-1.5 bg-[#0969DA] hover:bg-[#1F7AED] disabled:opacity-50 text-white text-sm font-medium px-3 py-1.5 rounded transition-colors"
+              >
+                {generatingMemoria ? 'Generando…' : '📄 Memoria Técnica SEC'}
+              </button>
+            )}
+          </div>
           <Link
             href={`/calculator?project=${id}`}
             className="flex items-center gap-1.5 bg-[#238636] hover:bg-[#2EA043] text-white text-sm font-medium px-3 py-1.5 rounded transition-colors"
@@ -83,6 +121,39 @@ export default function ProjectDetailPage() {
             + Nuevo cálculo
           </Link>
         </div>
+
+        {/* Panel de demanda máxima */}
+        {showDemand && demand && (
+          <div className="bg-[#161B22] border border-[#30363D] rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-[#E6EDF3]">Demanda máxima del proyecto</h3>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded border ${demand.tasa_cumplimiento_pct >= 100 ? 'text-[#3FB950] border-[#3FB95040] bg-[#3FB95010]' : 'text-[#F85149] border-[#F8514940] bg-[#F8514910]'}`}>
+                {demand.circuitos_cumplen}/{demand.total_circuitos} circuitos RIC
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Potencia instalada', value: `${demand.potencia_instalada_kw.toFixed(1)} kW` },
+                { label: 'Demanda máxima', value: `${demand.demanda_maxima_kw.toFixed(1)} kW` },
+                { label: 'Potencia aparente', value: `${demand.demanda_maxima_kva.toFixed(1)} kVA` },
+                { label: 'Corriente empalme', value: `${demand.corriente_empalme_a.toFixed(1)} A`, highlight: true },
+              ].map(item => (
+                <div key={item.label} className="bg-[#0D1117] border border-[#30363D] rounded p-3">
+                  <p className="text-xs text-[#8B949E] mb-1">{item.label}</p>
+                  <p className={`text-lg font-mono font-semibold ${item.highlight ? 'text-[#F0B429]' : 'text-[#E6EDF3]'}`}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-xs text-[#8B949E]">
+              <div>Sistema: <span className="text-[#E6EDF3] capitalize">{demand.sistema_predominante}</span></div>
+              <div>Tensión empalme: <span className="text-[#E6EDF3] font-mono">{demand.tension_empalme_v} V</span></div>
+              <div>FP promedio: <span className="text-[#E6EDF3] font-mono">{demand.factor_potencia_promedio.toFixed(3)}</span></div>
+              <div>Sección máx.: <span className="text-[#E6EDF3] font-mono">{demand.seccion_max_mm2} mm²</span></div>
+              <div>Sección prom.: <span className="text-[#E6EDF3] font-mono">{demand.seccion_promedio_mm2} mm²</span></div>
+              <div>Circuitos: <span className="text-[#E6EDF3]">{demand.total_circuitos}</span></div>
+            </div>
+          </div>
+        )}
 
         {/* Lista de cálculos */}
         {calculations.length === 0 ? (

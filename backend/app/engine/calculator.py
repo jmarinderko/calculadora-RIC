@@ -15,6 +15,7 @@ from app.engine.schemas import (
     CalculatorInput, CalculatorResult, CalculatorResponse,
     RadioCurvatura, EstresTermico,
 )
+from app.engine.protection_selector import seleccionar_proteccion
 
 # Límite de caída por tipo de circuito (RIC Art. 5.5.4)
 LIMITE_CAIDA_CIRCUITO: dict[str, float] = {
@@ -335,6 +336,15 @@ def calculate(inp: CalculatorInput) -> CalculatorResponse:
             "Paralelo: cables de igual longitud, material, sección y tipo (RIC Art. 5.3.2)."
         )
 
+    # Selección de protecciones (termomagnético + diferencial)
+    proteccion_data = seleccionar_proteccion(
+        i_b=round(i_calc, 3),
+        i_z=round(imax_final, 3),
+        tipo_circuito=inp.tipo_circuito,
+        sistema=inp.sistema,
+        icc_ka=inp.icc_ka,
+    )
+
     resultado = CalculatorResult(
         seccion_mm2=sec_final,
         calibre_awg=fila_final.awg,
@@ -359,6 +369,7 @@ def calculate(inp: CalculatorInput) -> CalculatorResponse:
         descripcion_config=descripcion_config,
         radio_curvatura=radio_data,
         estres_termico=estres_data,
+        proteccion=proteccion_data,
         ajustado_por_minimo=ajustado_por_minimo,
         ajustado_por_caida=ajustado_por_caida,
         sec_min_ric_mm2=sec_min_ric,

@@ -8,6 +8,7 @@ import type {
   ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
   AdminStats, AdminUser, Conductor, UsageCharts,
   UserProfile, ProfileUpdate, ShareResponse, PublicCalculation,
+  DemandaSummary,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -178,6 +179,45 @@ export async function updateConductor(id: string, data: Partial<Conductor>): Pro
 
 export async function deleteConductor(id: string): Promise<void> {
   await api.delete(`/api/admin/catalog/${id}`)
+}
+
+// ── Demand Summary ────────────────────────────────────────────────────────────
+
+export async function getDemandSummary(projectId: string): Promise<DemandaSummary> {
+  const res = await api.get<DemandaSummary>(`/api/projects/${projectId}/demand-summary`)
+  return res.data
+}
+
+// ── SEC Memory PDF ────────────────────────────────────────────────────────────
+
+export async function downloadSecMemory(
+  projectId: string,
+  projectName: string,
+  numeroMemoria = '001',
+): Promise<void> {
+  const session = await getSession()
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if ((session as any)?.accessToken) {
+    headers['Authorization'] = `Bearer ${(session as any).accessToken}`
+  }
+  const resp = await fetch(`${API_BASE}/api/reports/project/${projectId}/sec-memory`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ numero_memoria: numeroMemoria }),
+  })
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }))
+    throw new Error((err as any).detail ?? 'Error al generar Memoria Técnica')
+  }
+  const blob = await resp.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `Memoria_SEC_${projectName.replace(/\s+/g, '_')}_${numeroMemoria}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────

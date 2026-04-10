@@ -19,6 +19,7 @@ from app.db.session import get_session
 from app.db.models import User, Calculation, Project, Report
 from app.api.deps import get_current_user
 from .report_template import render_html
+from .sec_memory_template import render_sec_memory
 
 router = APIRouter()
 
@@ -167,6 +168,119 @@ async def download_report(
     )
 
     filename = f"memoria_calculo_RIC_{str(report.id)[:8]}.pdf"
+    pdf_bytes = await _call_pdf_service(html, filename)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(pdf_bytes)),
+        },
+    )
+
+
+# ── Memoria Técnica SEC — nivel proyecto ─────────────────────────────────────
+
+class SecMemoryRequest(BaseModel):
+    numero_memoria: Optional[str] = "001"
+
+
+@router.post(
+    "/project/{project_id}/sec-memory",
+    summary="Genera la Memoria Técnica SEC completa del proyecto",
+    response_class=Response,
+)
+async def generate_sec_memory(
+    project_id: uuid.UUID,
+    body: SecMemoryRequest = SecMemoryRequest(),
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Genera el PDF de Memoria Técnica SEC para el proyecto completo.
+    Incluye cuadro de cargas, demanda máxima, y cálculo detallado
+    de cada circuito con protecciones recomendadas.
+    """
+    # Verificar propiedad del proyecto
+    proj_res = await db.execute(
+        select(Project).where(Project.id == project_id, Project.owner_id == current_user.id)
+    )
+    project: Optional[Project] = proj_res.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    # Cargar todos los cálculos del proyecto
+    calcs_res = await db.execute(
+        select(Calculation)
+        .where(Calculation.project_id == project_id)
+        .order_by(Calculation.created_at)
+    )
+    calcs = calcs_res.scalars().all()
+    if not calcs:
+        raise HTTPException(status_code=422, detail="El proyecto no tiene cálculos guardados.")
+
+    # Calcular demanda (inline, sin llamada HTTP)
+    import math as _math
+    potencia_instalada = sum(float(c.potencia_kw) for c in calcs)
+    demanda_total = sum(
+        float(c.potencia_kw) * float((c.input_data or {}).get("factor_demanda", 1.0))
+        for c in calcs
+    )
+    fp_prom = sum(float((c.input_data or {}).get("factor_potencia", 0.85)) for c in calcs) / len(calcs)
+    kva_total = demanda_total / fp_prom if fp_prom > 0 else demanda_total
+    sistemas: dict[str, int] = {}
+    for c in calcs:
+        s = c.sistema or "monofasico"
+        sistemas[s] = sistemas.get(s, 0) + 1
+    sistema_pred = max(sistemas, key=lambda k: sistemas[k])
+    tensiones = [float(c.tension_v) for c in calcs]
+    tension_empalme = max(set(tensiones), key=lambda t: tensiones.count(t))
+    if sistema_pred == "trifasico":
+        i_empalme = kva_total * 1000 / (_math.sqrt(3) * tension_empalme) if tension_empalme else 0
+    else:
+        i_empalme = kva_total * 1000 / tension_empalme if tension_empalme else 0
+    cumplen = sum(1 for c in calcs if c.cumple_ric)
+    secciones = [c.seccion_mm2 for c in calcs]
+
+    demand = {
+        "total_circuitos": len(calcs),
+        "circuitos_cumplen": cumplen,
+        "tasa_cumplimiento_pct": round(cumplen / len(calcs) * 100, 1),
+        "potencia_instalada_kw": round(potencia_instalada, 3),
+        "demanda_maxima_kw": round(demanda_total, 3),
+        "demanda_maxima_kva": round(kva_total, 3),
+        "factor_potencia_promedio": round(fp_prom, 3),
+        "corriente_empalme_a": round(i_empalme, 2),
+        "tension_empalme_v": tension_empalme,
+        "sistema_predominante": sistema_pred,
+        "seccion_max_mm2": max(secciones),
+    }
+
+    calculations_data = [
+        {
+            "name": c.name,
+            "input_data": c.input_data or {},
+            "result_data": c.result_data or {},
+            "created_at": c.created_at.isoformat(),
+        }
+        for c in calcs
+    ]
+
+    fecha = datetime.now(timezone.utc).strftime("%d/%m/%Y")
+    html = render_sec_memory(
+        project_name=project.name,
+        project_location=project.location,
+        project_description=project.description,
+        user_name=current_user.full_name or current_user.email,
+        demand=demand,
+        calculations=calculations_data,
+        fecha=fecha,
+        numero_memoria=body.numero_memoria or "001",
+    )
+
+    safe_name = project.name.replace(" ", "_")[:40]
+    filename = f"Memoria_SEC_{safe_name}_{body.numero_memoria or '001'}.pdf"
     pdf_bytes = await _call_pdf_service(html, filename)
 
     return Response(
