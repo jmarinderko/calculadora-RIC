@@ -27,32 +27,39 @@ def _init_engine():
 
 
 def _apply_alembic_migrations(stamp_first: bool = False) -> None:
-    """Corre Alembic upgrade head en un thread (Alembic es síncrono).
+    """Corre Alembic upgrade head vía subprocess (evita conflicto de nombres con /alembic/).
 
     Si stamp_first=True, primero hace 'stamp 001' para indicar que la BD fue
     creada con create_all (sin historial Alembic) y luego aplica migraciones
     pendientes a partir de la rev 002.
     """
     import os
-    from alembic.config import Config
-    from alembic import command
+    import subprocess
 
-    # alembic.ini está en /app en el container (WORKDIR), o 3 niveles arriba en dev
-    alembic_ini = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'alembic.ini')
-    alembic_ini = os.path.normpath(alembic_ini)
+    # El alembic.ini está 3 directorios arriba de este archivo (raíz del backend)
+    cwd = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    alembic_ini = os.path.join(cwd, 'alembic.ini')
 
     if not os.path.exists(alembic_ini):
         logger.warning(f"[init_db] alembic.ini no encontrado en {alembic_ini}, saltando migraciones")
         return
 
-    cfg = Config(alembic_ini)
-
     if stamp_first:
         logger.info("[init_db] BD sin historial Alembic — marcando en revisión 001")
-        command.stamp(cfg, "001")
+        result = subprocess.run(['alembic', 'stamp', '001'], cwd=cwd, capture_output=True, text=True)
+        if result.stdout:
+            logger.info(f"[alembic stamp] {result.stdout.strip()}")
+        if result.returncode != 0:
+            logger.error(f"[alembic stamp] error: {result.stderr.strip()}")
+            raise RuntimeError(f"alembic stamp failed: {result.stderr}")
 
     logger.info("[init_db] Aplicando migraciones pendientes (alembic upgrade head)")
-    command.upgrade(cfg, "head")
+    result = subprocess.run(['alembic', 'upgrade', 'head'], cwd=cwd, capture_output=True, text=True)
+    if result.stdout:
+        logger.info(f"[alembic upgrade] {result.stdout.strip()}")
+    if result.returncode != 0:
+        logger.error(f"[alembic upgrade] error: {result.stderr.strip()}")
+        raise RuntimeError(f"alembic upgrade failed: {result.stderr}")
     logger.info("[init_db] Migraciones aplicadas correctamente")
 
 
