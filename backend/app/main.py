@@ -51,7 +51,13 @@ class DynamicCORSMiddleware(BaseHTTPMiddleware):
             # Preflight
             response = Response(status_code=200)
         else:
-            response = await call_next(request)
+            try:
+                response = await call_next(request)
+            except Exception:
+                # En excepciones no manejadas agregar CORS igualmente para que el
+                # browser muestre el error real (500) en vez de un error CORS falso
+                response = Response(status_code=500, content=b'{"detail":"Internal server error"}',
+                                    media_type="application/json")
 
         if allowed:
             response.headers["Access-Control-Allow-Origin"] = origin
