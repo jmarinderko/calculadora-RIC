@@ -343,6 +343,44 @@ export interface AdminUser {
   project_count: number
 }
 
+// ── Profile ───────────────────────────────────────────────────────────────────
+
+export interface UserProfile {
+  id: string
+  email: string
+  full_name?: string
+  is_admin: boolean
+}
+
+export interface ProfileUpdate {
+  full_name?: string
+  current_password?: string
+  new_password?: string
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────────
+
+export interface ShareResponse {
+  share_token: string
+  share_url: string
+}
+
+export interface PublicCalculation {
+  id: string
+  name?: string
+  sistema: string
+  tension_v: number
+  potencia_kw: number
+  seccion_mm2: number
+  cumple_ric: boolean
+  input_data: Record<string, unknown>
+  result_data: Record<string, unknown>
+  project_name?: string
+  created_at: string
+}
+
+// ── Conductor Catalog ─────────────────────────────────────────────────────────
+
 export interface Conductor {
   id: string
   proveedor?: string

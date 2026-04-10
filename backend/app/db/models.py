@@ -63,6 +63,7 @@ class Calculation(Base):
     cumple_ric: Mapped[bool] = mapped_column(Boolean)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    share_token: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True, index=True)
 
     project: Mapped["Project"] = relationship("Project", back_populates="calculations")
 

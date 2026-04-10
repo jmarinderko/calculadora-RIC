@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     # Servicios
     pdf_service_url: str = "http://pdf-service:9000"
 
+    # Email (Resend — dejar vacío para deshabilitar)
+    resend_api_key: str = ""
+    from_email: str = "noreply@ricconductor.cl"
+    app_url: str = "http://localhost:3001"
+
     class Config:
         env_file = ".env"
         case_sensitive = False

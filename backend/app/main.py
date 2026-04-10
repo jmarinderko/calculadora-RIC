@@ -8,6 +8,7 @@ from app.api.routes import health, auth, calc, projects, unifilar, reports
 from app.api.routes import calc_mtat
 from app.api.routes import calc_ernc
 from app.api.routes import admin
+from app.api.routes import profile, share, exports
 
 
 @asynccontextmanager
@@ -43,3 +44,7 @@ app.include_router(calc_ernc.router, prefix="/api/calc", tags=["calculator-ernc"
 app.include_router(unifilar.router, prefix="/api/unifilar", tags=["unifilar"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(profile.router, prefix="/api/users/profile", tags=["profile"])
+app.include_router(share.router, prefix="/api/calculations", tags=["share"])
+app.include_router(share.router, prefix="/api/share", tags=["share-public"])
+app.include_router(exports.router, prefix="/api/exports", tags=["exports"])

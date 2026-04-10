@@ -5,6 +5,8 @@ export const config = {
     '/dashboard/:path*',
     '/calculator/:path*',
     '/projects/:path*',
+    '/profile/:path*',
+    '/profile',
     '/admin/:path*',
     '/admin',
   ],

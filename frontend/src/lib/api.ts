@@ -7,6 +7,7 @@ import type {
   ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
   ERNCGdRedBtInput, ERNCBateriasDCInput, ERNCResponse,
   AdminStats, AdminUser, Conductor, UsageCharts,
+  UserProfile, ProfileUpdate, ShareResponse, PublicCalculation,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -177,6 +178,54 @@ export async function updateConductor(id: string, data: Partial<Conductor>): Pro
 
 export async function deleteConductor(id: string): Promise<void> {
   await api.delete(`/api/admin/catalog/${id}`)
+}
+
+// ── Profile ───────────────────────────────────────────────────────────────────
+
+export async function getProfile(): Promise<UserProfile> {
+  const res = await api.get<UserProfile>('/api/users/profile')
+  return res.data
+}
+
+export async function updateProfile(data: ProfileUpdate): Promise<UserProfile> {
+  const res = await api.patch<UserProfile>('/api/users/profile', data)
+  return res.data
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────────
+
+export async function shareCalculation(calculationId: string): Promise<ShareResponse> {
+  const res = await api.post<ShareResponse>(`/api/calculations/${calculationId}/share`)
+  return res.data
+}
+
+export async function getPublicCalculation(token: string): Promise<PublicCalculation> {
+  const res = await api.get<PublicCalculation>(`/api/share/public/${token}`)
+  return res.data
+}
+
+// ── Exports ───────────────────────────────────────────────────────────────────
+
+export async function exportXlsx(calculationId: string, filename = 'calculo_RIC.xlsx'): Promise<void> {
+  const session = await getSession()
+  const headers: Record<string, string> = {}
+  if ((session as any)?.accessToken) {
+    headers['Authorization'] = `Bearer ${(session as any).accessToken}`
+  }
+  const resp = await fetch(`${API_BASE}/api/exports/${calculationId}/xlsx`, { headers })
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: resp.statusText }))
+    throw new Error((err as any).detail ?? 'Error al exportar Excel')
+  }
+  const blob = await resp.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 // ── Unifilar ──────────────────────────────────────────────────────────────────

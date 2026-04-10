@@ -8,6 +8,7 @@ from app.db.session import get_session
 from app.db.models import User
 from app.core.security import hash_password, verify_password, create_access_token
 from app.api.deps import get_current_user
+from app.services.email import send_welcome_email
 
 router = APIRouter()
 
@@ -53,6 +54,8 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_session
     await db.refresh(user)
 
     token = create_access_token(str(user.id))
+    # Email de bienvenida (no bloquea el registro si falla)
+    await send_welcome_email(user.email, user.full_name)
     return TokenResponse(access_token=token)
 
 
@@ -88,6 +91,7 @@ async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_se
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        await send_welcome_email(user.email, user.full_name)
 
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Cuenta desactivada")
