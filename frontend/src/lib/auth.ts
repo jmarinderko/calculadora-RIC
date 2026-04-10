@@ -42,6 +42,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account, profile }) {
       // Login con Google
       if (account?.provider === 'google' && profile?.email) {
+        token.provider = 'google'
         const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
         try {
           const res = await fetch(`${backendUrl}/api/auth/google`, {
@@ -61,12 +62,14 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = (user as any).accessToken
         token.email = user.email
         token.isAdmin = (user as any).isAdmin ?? false
+        if (!token.provider) token.provider = 'credentials'
       }
       return token
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string
       session.isAdmin = token.isAdmin as boolean
+      session.provider = token.provider as string
       return session
     },
   },
@@ -81,11 +84,13 @@ declare module 'next-auth' {
   interface Session {
     accessToken?: string
     isAdmin?: boolean
+    provider?: string
   }
 }
 declare module 'next-auth/jwt' {
   interface JWT {
     accessToken?: string
     isAdmin?: boolean
+    provider?: string
   }
 }
