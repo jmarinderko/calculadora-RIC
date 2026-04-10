@@ -440,6 +440,44 @@ export interface PublicCalculation {
   created_at: string
 }
 
+// ── Voltage Drop Tree ─────────────────────────────────────────────────────────
+
+export interface TramoInput {
+  nombre: string
+  sistema: string
+  tension_v: number
+  potencia_kw: number
+  factor_potencia: number
+  longitud_m: number
+  seccion_mm2: number
+  material: string
+  tipo_circuito: string
+}
+
+export interface VoltageDropTreeInput {
+  tramos: TramoInput[]
+  tension_origen_v: number
+}
+
+export interface TramoResult {
+  nombre: string
+  i_a: number
+  caida_v: number
+  caida_pct: number
+  caida_acumulada_v: number
+  caida_acumulada_pct: number
+  tension_final_v: number
+  limite_pct: number
+  cumple: boolean
+}
+
+export interface VoltageDropTreeResult {
+  tramos: TramoResult[]
+  caida_total_pct: number
+  cumple_total: boolean
+  advertencias: string[]
+}
+
 // ── Conductor Catalog ─────────────────────────────────────────────────────────
 
 export interface Conductor {
@@ -462,3 +500,104 @@ export interface Conductor {
   version_catalogo?: string
 }
 
+// ── Power Factor (Banco de Condensadores) ────────────────────────────────────
+
+export interface PowerFactorInput {
+  potencia_kw: number
+  fp_actual: number
+  fp_objetivo: number
+  tension_v: number
+  sistema: string
+  frecuencia_hz: number
+  horas_mensuales: number
+  tarifa_kvarh: number
+}
+
+export interface PowerFactorResult {
+  fp_actual: number
+  fp_objetivo: number
+  potencia_activa_kw: number
+  potencia_reactiva_antes_kvar: number
+  potencia_reactiva_despues_kvar: number
+  q_compensar_kvar: number
+  q_banco_standard_kvar: number
+  corriente_antes_a: number
+  corriente_despues_a: number
+  reduccion_corriente_pct: number
+  capacitancia_por_fase_uf: number
+  ahorro_mensual_usd: number
+  ahorro_anual_usd: number
+  advertencias: string[]
+}
+
+// ── Grounding (Puesta a Tierra) ───────────────────────────────────────────────
+
+export interface GroundingInput {
+  tipo_electrodo: string
+  resistividad_suelo: number
+  longitud_varilla_m: number
+  diametro_varilla_m: number
+  numero_varillas: number
+  espaciado_varillas_m: number
+  longitud_cable_m: number
+  diametro_cable_m: number
+  profundidad_m: number
+  ancho_malla_m: number
+  largo_malla_m: number
+  tipo_instalacion: string
+  corriente_disparo_a?: number
+}
+
+export interface GroundingResult {
+  tipo_electrodo: string
+  resistencia_calculada_ohm: number
+  resistencia_requerida_ohm: number
+  cumple: boolean
+  descripcion_electrodo: string
+  recomendacion: string
+  advertencias: string[]
+}
+
+// ── Lighting / Iluminación (NCh 2/1984) ──────────────────────────────────────
+
+export interface LightingInput {
+  largo_m: number
+  ancho_m: number
+  altura_m: number
+  altura_trabajo_m: number
+  flujo_luminaria_lm: number
+  tipo_recinto: string
+  iluminancia_objetivo_lux?: number
+  reflectancia_techo: number
+  reflectancia_paredes: number
+  factor_mantenimiento: number
+  potencia_luminaria_w: number
+}
+
+export interface LightingResult {
+  iluminancia_objetivo_lux: number
+  iluminancia_real_lux: number
+  area_m2: number
+  indice_local_k: number
+  coeficiente_utilizacion: number
+  factor_mantenimiento: number
+  numero_luminarias: number
+  filas: number
+  columnas: number
+  separacion_largo_m: number
+  separacion_ancho_m: number
+  potencia_instalada_w: number
+  densidad_potencia_wm2: number
+  cumple_nch2: boolean
+  nivel_minimo_nch2_lux: number
+  advertencias: string[]
+}
+
+// ── Plantillas de Proyecto ────────────────────────────────────────────────────
+
+export interface ProjectTemplate {
+  id: string
+  nombre: string
+  descripcion: string
+  num_circuitos: number
+}
