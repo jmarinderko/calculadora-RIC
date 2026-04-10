@@ -75,12 +75,12 @@ export const authOptions: NextAuthOptions = {
           console.error('[auth] No se pudo obtener accessToken del backend para Google OAuth')
         }
       }
-      // Login con credenciales
-      if (user) {
+      // Login con credenciales (no correr para Google — user también viene en OAuth y no tiene accessToken)
+      if (user && account?.provider === 'credentials') {
         token.accessToken = (user as any).accessToken
         token.email = user.email
         token.isAdmin = (user as any).isAdmin ?? false
-        if (!token.provider) token.provider = 'credentials'
+        token.provider = 'credentials'
       }
       return token
     },
