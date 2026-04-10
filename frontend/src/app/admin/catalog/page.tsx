@@ -94,7 +94,7 @@ export default function AdminCatalogPage() {
     setConductores(prev => prev.map(c => c.id === id ? { ...c, activo: false } : c))
   }
 
-  const proveedores = [...new Set(conductores.map(c => c.proveedor).filter(Boolean))]
+  const proveedores = Array.from(new Set(conductores.map(c => c.proveedor).filter(Boolean))) as string[]
 
   return (
     <div style={{ padding: '32px 40px' }}>
