@@ -43,19 +43,37 @@ export const authOptions: NextAuthOptions = {
       // Login con Google
       if (account?.provider === 'google' && profile?.email) {
         token.provider = 'google'
-        const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        try {
-          const res = await fetch(`${backendUrl}/api/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: profile.email, name: (profile as any).name }),
-          })
-          if (res.ok) {
-            const data = await res.json()
-            token.accessToken = data.access_token
-            token.isAdmin = data.is_admin ?? false
+        // Intentar con BACKEND_URL (server-side, interno Railway) y si falla
+        // reintentar con NEXT_PUBLIC_API_URL (URL pública)
+        const urls = [
+          process.env.BACKEND_URL,
+          process.env.NEXT_PUBLIC_API_URL,
+          'http://localhost:8000',
+        ].filter(Boolean) as string[]
+
+        for (const backendUrl of urls) {
+          try {
+            const res = await fetch(`${backendUrl}/api/auth/google`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: profile.email, name: (profile as any).name }),
+            })
+            if (res.ok) {
+              const data = await res.json()
+              token.accessToken = data.access_token
+              token.isAdmin = data.is_admin ?? false
+              break  // éxito — no seguir intentando
+            } else {
+              console.error(`[auth] Google backend call failed at ${backendUrl}: HTTP ${res.status}`)
+            }
+          } catch (err) {
+            console.error(`[auth] Google backend call error at ${backendUrl}:`, err)
           }
-        } catch { /* silencioso — token queda sin accessToken */ }
+        }
+
+        if (!token.accessToken) {
+          console.error('[auth] No se pudo obtener accessToken del backend para Google OAuth')
+        }
       }
       // Login con credenciales
       if (user) {
