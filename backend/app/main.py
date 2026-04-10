@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="RIC Conductor SaaS — API",
-    description="API para cálculo de conductores eléctricos NCh Elec 4/2003 (RIC Chile)",
+    description="API para cálculo de conductores eléctricos RIC Chile",
     version="1.0.0",
     lifespan=lifespan,
 )

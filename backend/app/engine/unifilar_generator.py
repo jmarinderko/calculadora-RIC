@@ -1,5 +1,5 @@
 """
-Generador de diagrama unifilar SVG — RIC NCh Elec 4/2003
+Generador de diagrama unifilar SVG — RIC
 SVG puro Python (solo stdlib), sin dependencias externas.
 viewBox 800×600 px.
 """
@@ -447,7 +447,7 @@ def _tabla_resumen(resultado: dict) -> str:
         partes.append(_rect(tx, base_y, tw, row_h,
                             fill="#f0fdf4", stroke="#bbf7d0", stroke_width="1"))
         partes.append(_text(tx + 12, base_y + 15,
-                            "Instalación conforme NCh Elec 4/2003 — RIC Art. 5.3.1 / 5.5.4",
+                            "Instalación conforme RIC Art. 5.3.1 / 5.5.4",
                             font_family="IBM Plex Mono, monospace",
                             font_size="9", fill="#166534"))
 
@@ -462,7 +462,7 @@ def _titulo_diagrama(resultado: dict, input_data: dict | None) -> str:
     sistema_str = sistema_map.get(sistema, sistema)
 
     partes = [
-        _text(400, 22, "DIAGRAMA UNIFILAR — NCh Elec 4/2003 (RIC Chile)",
+        _text(400, 22, "DIAGRAMA UNIFILAR — RIC Chile",
               font_family="IBM Plex Mono, monospace",
               font_size="13", fill="#0f172a", font_weight="700",
               text_anchor="middle"),

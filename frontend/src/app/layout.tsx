@@ -3,7 +3,7 @@ import './globals.css'
 import { Providers } from './providers'
 
 export const metadata: Metadata = {
-  title: 'RIC Conductor — Calculadora NCh Elec 4/2003',
+  title: 'RIC Conductor — Calculadora RIC',
   description: 'Plataforma de cálculo de conductores eléctricos bajo norma RIC chilena',
 }
 

@@ -40,7 +40,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <span className="font-mono text-2xl font-semibold text-[#58A6FF]">RIC Conductor</span>
-          <p className="mt-1 text-sm text-[#8B949E]">Calculadora NCh Elec 4/2003</p>
+          <p className="mt-1 text-sm text-[#8B949E]">Calculadora RIC</p>
         </div>
 
         <div className="bg-[#161B22] border border-[#30363D] rounded-lg p-6">

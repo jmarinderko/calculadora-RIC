@@ -341,7 +341,7 @@ def render_html(
     <div class="header-left">
       <h1>Memoria de Cálculo de Conductores Eléctricos</h1>
       <div class="sub">
-        Calculado según <strong>NCh Elec 4/2003 (RIC)</strong> &nbsp;·&nbsp;
+        Calculado según <strong>RIC</strong> &nbsp;·&nbsp;
         Reglamento de Instalaciones de Consumo — SEC Chile
       </div>
     </div>
@@ -361,7 +361,7 @@ def render_html(
       <div class="sc-value" style="font-size:14px;color:{'#1a7f37' if cumple_ok else '#cf222e'};">
         {'CUMPLE' if cumple_ok else 'NO CUMPLE'}
       </div>
-      <div class="sc-sub">NCh Elec 4/2003</div>
+      <div class="sc-sub">RIC</div>
     </div>
     <div class="summary-card">
       <div class="sc-label">Sección elegida</div>
@@ -538,10 +538,10 @@ def render_html(
   <div class="section">
     <div class="section-title">Referencias normativas aplicadas</div>
     <ul style="padding-left:18px;line-height:2;font-size:9.5px;color:#57606a;">
-      <li><strong>NCh Elec 4/2003 (RIC) Art. 5.3</strong> — Selección de conductores por capacidad de corriente</li>
-      <li><strong>NCh Elec 4/2003 (RIC) Art. 5.3.1</strong> — Sección mínima por tipo de circuito</li>
-      <li><strong>NCh Elec 4/2003 (RIC) Art. 5.5.4</strong> — Límites de caída de tensión</li>
-      <li><strong>NCh Elec 4/2003 (RIC) Art. 5.4</strong> — Tipos de canalización e instalación</li>
+      <li><strong>RIC Art. 5.3</strong> — Selección de conductores por capacidad de corriente</li>
+      <li><strong>RIC Art. 5.3.1</strong> — Sección mínima por tipo de circuito</li>
+      <li><strong>RIC Art. 5.5.4</strong> — Límites de caída de tensión</li>
+      <li><strong>RIC Art. 5.4</strong> — Tipos de canalización e instalación</li>
       <li><strong>RIC Tabla 5-3</strong> — Factor de temperatura ambiente (Ft)</li>
       <li><strong>RIC Tabla 5-4</strong> — Factor de agrupamiento de circuitos (Fg)</li>
       <li><strong>IEC 60364-5-52 Tabla B.52.15</strong> — Factor de corrección por altitud (Fa)</li>
@@ -553,7 +553,7 @@ def render_html(
   <!-- ── PIE DE PÁGINA ── -->
   <div class="footer">
     <div>
-      <span class="norma">Calculado según NCh Elec 4/2003 (RIC)</span> —
+      <span class="norma">Calculado según RIC</span> —
       Reglamento de Instalaciones de Consumo, Superintendencia de Electricidad y Combustibles (SEC), Chile
     </div>
     <div>RIC Conductor SaaS · {calc_date}</div>

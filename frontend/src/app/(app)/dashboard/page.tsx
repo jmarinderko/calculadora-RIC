@@ -72,7 +72,7 @@ export default function DashboardPage() {
             <KpiCard
               label="Norma aplicada"
               value="RIC"
-              sub="NCh Elec 4/2003"
+              sub="RIC"
               color="#D29922"
             />
             <KpiCard

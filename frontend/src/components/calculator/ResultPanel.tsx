@@ -552,13 +552,13 @@ export function ResultPanel({ result, input, onRecalculate }: Props) {
       {/* ── REFERENCIAS NORMATIVAS ── */}
       <div className="ric-ref">
         Referencias normativas aplicadas:<br />
-        · NCh Elec 4/2003 (RIC) Art. 5.3 — Selección de conductores por capacidad de corriente<br />
-        · NCh Elec 4/2003 (RIC) Art. 5.5.4 — Límites de caída de tensión<br />
-        · NCh Elec 4/2003 (RIC) Art. 5.4 — Tipos de canalización e instalación<br />
+        · RIC Art. 5.3 — Selección de conductores por capacidad de corriente<br />
+        · RIC Art. 5.5.4 — Límites de caída de tensión<br />
+        · RIC Art. 5.4 — Tipos de canalización e instalación<br />
         · Factores de corrección: Tabla 5-3 (temperatura), Tabla 5-4 (agrupamiento)<br />
         · Radio mínimo curvatura: NEC 300.34 / IEC 60364-5-52 — factor según tipo de montaje<br />
         · Corrección por altitud: IEC 60364-5-52 Tabla B.52.15 — aplica sobre 1000 msnm<br />
-        · Sección mínima: RIC NCh Elec 4/2003 Art. 5.3.1 — según tipo de circuito<br />
+        · Sección mínima: RIC Art. 5.3.1 — según tipo de circuito<br />
         · Estrés térmico: IEC 60949 — S_mín = Icc×√t / K (Cu-THW=115, Cu-XLPE=143, Al-THW=74, Al-XLPE=94)
       </div>
     </div>

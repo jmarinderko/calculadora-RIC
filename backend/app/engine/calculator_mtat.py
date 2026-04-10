@@ -2,7 +2,7 @@
 Motor de cálculo MT/AT — IEC 60502-2 / IEC 60287 / IEC 60949
 Media Tensión (1–36 kV) y Alta Tensión (36–220 kV)
 
-Diferencias clave respecto al motor BT (RIC NCh Elec 4/2003):
+Diferencias clave respecto al motor BT (RIC):
   - Caída de tensión con impedancia compleja Z = R_ac + jX (no solo resistencia)
   - Ampacidades base de IEC 60502-2 con cuatro factores de corrección
   - Icc trifásico: I3f = Vf / Zcc  donde Vf = Vn/√3

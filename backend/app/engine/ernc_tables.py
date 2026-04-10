@@ -3,7 +3,7 @@ Tablas ERNC — Energía Renovable No Convencional (Solar FV / Baterías)
 Fuentes:
   - IEC 62930 / EN 50618  → cable solar ZZ-F (doble aislación, resistente UV)
   - IEC 60364-7-712       → instalaciones fotovoltaicas
-  - NCh Elec 4/2003       → requisitos mínimos instalación
+  - RIC       → requisitos mínimos instalación
   - NTCO SEC (2020)       → normativa generación distribuida red BT Chile
 """
 from dataclasses import dataclass
@@ -37,7 +37,7 @@ TABLA_ZZF: list[ZZFRow] = [
 # Sección mínima absoluta para string DC (IEC 60364-7-712 cláusula 712.52.1)
 SEC_MIN_DC_MM2 = 4.0
 
-# Sección mínima para AC inversor (NCh Elec 4/2003 Art. 5.3.1 — alimentador)
+# Sección mínima para AC inversor (RIC Art. 5.3.1 — alimentador)
 SEC_MIN_AC_MM2 = 4.0
 
 

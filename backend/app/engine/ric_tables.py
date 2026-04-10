@@ -1,7 +1,7 @@
 """
-Tablas normativas RIC — NCh Elec 4/2003
+Tablas normativas RIC — RIC
 Portado desde calculadora_ric_v7.html (JavaScript → Python)
-Fuente: Tabla 5-1 NCh Elec 4/2003, conductores THW 75°C, T_amb=30°C
+Fuente: Tabla 5-1 RIC, conductores THW 75°C, T_amb=30°C
 """
 from dataclasses import dataclass
 from typing import Optional

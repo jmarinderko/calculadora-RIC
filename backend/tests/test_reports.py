@@ -154,7 +154,7 @@ def test_render_html_contains_key_data():
     )
 
     assert "<!DOCTYPE html>" in html
-    assert "NCh Elec 4/2003" in html
+    assert "RIC" in html
     assert "Circuito TA-1" in html
     assert "Edificio Central" in html
     assert "Santiago" in html
@@ -358,7 +358,7 @@ def test_render_html_no_estres_termico():
     # No debe aparecer la sección 5
     assert "Estrés térmico por cortocircuito (IEC 60949)" not in html
     # Pero sí el resto
-    assert "NCh Elec 4/2003" in html
+    assert "RIC" in html
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

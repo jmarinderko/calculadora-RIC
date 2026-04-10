@@ -93,7 +93,7 @@ async def export_xlsx(
     ws.row_dimensions[r].height = 22
     r += 1
 
-    ws.cell(row=r, column=1, value="NCh Elec 4/2003 — RIC Conductor.calc")
+    ws.cell(row=r, column=1, value="RIC Conductor.calc")
     ws.merge_cells(f"A{r}:C{r}")
     ws.cell(row=r, column=1).font = Font(name="Calibri", color="8B949E", size=9, italic=True)
     r += 2
@@ -152,7 +152,7 @@ async def export_xlsx(
 
     # Footer
     r += 1
-    ws.cell(row=r, column=1, value="Generado por RIC Conductor.calc — NCh Elec 4/2003")
+    ws.cell(row=r, column=1, value="Generado por RIC Conductor.calc — RIC")
     ws.cell(row=r, column=1).font = Font(name="Calibri", color="6E7681", size=8, italic=True)
 
     # Guardar en buffer

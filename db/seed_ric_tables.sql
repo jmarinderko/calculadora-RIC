@@ -1,4 +1,4 @@
--- ─── SEED: Tablas normativas RIC — NCh Elec 4/2003 ──────────────────────────
+-- ─── SEED: Tablas normativas RIC — RIC ──────────────────────────
 -- Cargadas al iniciar la BD. Referencia para el motor de cálculo.
 
 -- Crear tablas si no existen (Alembic las crea, pero el seed puede ejecutarse antes)

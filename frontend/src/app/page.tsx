@@ -8,7 +8,7 @@ const features = [
     icon: '⚡',
     title: 'Motor RIC Baja Tensión',
     desc: 'Cálculo térmico Art. 5.3 con factores Ft, Fg, Fa. 7 tipos de canalización, sistemas mono/bi/trifásico, estrés térmico IEC 60949.',
-    tag: 'NCh Elec 4/2003',
+    tag: 'RIC',
   },
   {
     icon: '🔌',
@@ -149,7 +149,7 @@ export default function LandingPage() {
         padding: '80px 24px 72px',
         textAlign: 'center',
       }}>
-        <Tag color="var(--accent)">NCh Elec 4/2003 — RIC Chile</Tag>
+        <Tag color="var(--accent)">RIC Chile</Tag>
 
         <h1 style={{
           fontFamily: "'IBM Plex Sans', sans-serif",
@@ -213,7 +213,7 @@ export default function LandingPage() {
         }}>
           {[
             { val: '~4.200', label: 'ingenieros eléctricos en Chile' },
-            { val: 'Art. 5.3', label: 'NCh Elec 4/2003 RIC' },
+            { val: 'Art. 5.3', label: 'RIC RIC' },
             { val: '3 módulos', label: 'BT · MT/AT · ERNC' },
           ].map(({ val, label }) => (
             <div key={val} style={{ textAlign: 'center' }}>
@@ -460,7 +460,7 @@ export default function LandingPage() {
           fontSize: 12,
           color: 'var(--text3)',
         }}>
-          RIC Conductor.calc — NCh Elec 4/2003 · Hecho para ingenieros eléctricos en Chile
+          RIC Conductor.calc — RIC · Hecho para ingenieros eléctricos en Chile
         </span>
       </footer>
     </div>

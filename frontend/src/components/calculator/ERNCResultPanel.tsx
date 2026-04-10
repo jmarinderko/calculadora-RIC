@@ -14,8 +14,8 @@ const TOPOLOGIA_LABELS: Record<string, string> = {
 
 const TOPOLOGIA_NORMA: Record<string, string> = {
   string_dc:   'IEC 60364-7-712 · IEC 62548 · EN 50618',
-  ac_inversor: 'NCh Elec 4/2003 · IEC 60364-7-712',
-  gd_red_bt:   'NTCO SEC (2020) · NCh Elec 4/2003',
+  ac_inversor: 'RIC · IEC 60364-7-712',
+  gd_red_bt:   'NTCO SEC (2020) · RIC',
   baterias_dc: 'IEC 62619 · IEC 60364-7-712',
 }
 

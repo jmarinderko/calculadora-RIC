@@ -1,5 +1,5 @@
 """
-Motor de cálculo RIC — NCh Elec 4/2003
+Motor de cálculo RIC — RIC
 Portado desde calculadora_ric_v7.html (JavaScript → Python)
 Lógica idéntica al prototipo HTML: mismas fórmulas, misma tabla, mismos factores.
 """

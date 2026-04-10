@@ -13,7 +13,7 @@ async def calc_conductor(
     body: CalculatorInput,
     current_user: User = Depends(get_current_user),
 ):
-    """Calcula el conductor óptimo según RIC NCh Elec 4/2003."""
+    """Calcula el conductor óptimo según RIC."""
     try:
         return calculate(body)
     except ValueError as e:

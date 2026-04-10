@@ -107,7 +107,7 @@ class TestContenidoSvg:
         assert '16mm²' in svg or '16' in svg
 
     def test_contiene_texto_ric(self):
-        """El SVG debe referenciar RIC/NCh Elec 4/2003."""
+        """El SVG debe referenciar RIC/RIC."""
         svg = generate_unifilar(make_resultado(), make_input())
         assert 'RIC' in svg or 'NCh' in svg
 

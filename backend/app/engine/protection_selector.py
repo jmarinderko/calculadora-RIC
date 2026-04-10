@@ -1,6 +1,6 @@
 """
 Motor de selección de protecciones eléctricas.
-Selecciona termomagnético y diferencial conforme RIC Art. 4.4 / NCh Elec 4/2003.
+Selecciona termomagnético y diferencial conforme RIC Art. 4.4 / RIC.
 Condición fundamental: Ib ≤ In ≤ Iz
 """
 from __future__ import annotations

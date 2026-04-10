@@ -137,7 +137,7 @@ export function UnifilarDiagram({ result, input }: Props) {
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
               }}>
-                Diagrama unifilar — NCh Elec 4/2003
+                Diagrama unifilar — RIC
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button

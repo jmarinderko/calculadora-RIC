@@ -61,7 +61,7 @@ export default function SharedCalculationPage() {
             <div className="font-mono text-base font-semibold">
               RIC Conductor<span className="text-[#F0B429]">.calc</span>
             </div>
-            <p className="text-xs text-[#8B949E] mt-0.5">NCh Elec 4/2003 — Cálculo compartido (solo lectura)</p>
+            <p className="text-xs text-[#8B949E] mt-0.5">RIC — Cálculo compartido (solo lectura)</p>
           </div>
           <span className={`text-sm font-bold px-3 py-1 rounded border ${
             calc.cumple_ric
@@ -121,7 +121,7 @@ export default function SharedCalculationPage() {
         </div>
 
         <p className="text-center text-xs text-[#6E7681] pt-2">
-          Generado por RIC Conductor.calc — NCh Elec 4/2003 · Chile
+          Generado por RIC Conductor.calc — RIC · Chile
         </p>
       </div>
     </div>

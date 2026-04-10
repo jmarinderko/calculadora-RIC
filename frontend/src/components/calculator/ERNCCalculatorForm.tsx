@@ -460,8 +460,8 @@ export function ERNCCalculatorForm({ onSubmit, loading }: Props) {
               <select className="form-select" value={limCaidaAC} onChange={e => setLimCaidaAC(e.target.value)}>
                 <option value="1.0">1.0% — Muy estricto</option>
                 <option value="1.5">1.5% — NTCO SEC / buena práctica (recomendado)</option>
-                <option value="2.0">2.0% — NCh Elec 4 alumbrado</option>
-                <option value="3.0">3.0% — NCh Elec 4 fuerza</option>
+                <option value="2.0">2.0% — RIC alumbrado</option>
+                <option value="3.0">3.0% — RIC fuerza</option>
               </select>
             </div>
           </div>

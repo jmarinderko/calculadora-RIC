@@ -37,7 +37,7 @@ async def send_welcome_email(email: str, name: str | None = None) -> bool:
       <h1 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">Bienvenido, {nombre}</h1>
       <p style="color: #8B949E; line-height: 1.7; margin-bottom: 20px;">
         Tu cuenta ha sido creada exitosamente. Ya podés comenzar a calcular conductores
-        eléctricos conforme a la norma <strong style="color: #E6EDF3;">NCh Elec 4/2003 (RIC)</strong>.
+        eléctricos conforme a la norma <strong style="color: #E6EDF3;">RIC</strong>.
       </p>
       <div style="background: #161B22; border: 1px solid #30363D; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
         <p style="margin: 0 0 8px; font-size: 13px; color: #8B949E;">Lo que podés hacer:</p>
@@ -53,7 +53,7 @@ async def send_welcome_email(email: str, name: str | None = None) -> bool:
         Ir al dashboard →
       </a>
       <p style="margin-top: 28px; font-size: 11px; color: #6E7681;">
-        RIC Conductor.calc — NCh Elec 4/2003 · Chile
+        RIC Conductor.calc — RIC · Chile
       </p>
     </div>
     """

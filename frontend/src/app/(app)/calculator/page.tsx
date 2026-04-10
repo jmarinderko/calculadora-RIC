@@ -123,7 +123,7 @@ function CalculatorInner() {
           <div className="empty-state">
             <div className="empty-icon">⚡</div>
             <p>Ingresa los parámetros y presiona calcular</p>
-            <p style={{ fontSize: '11px', color: 'var(--text3)' }}>NCh Elec 4/2003 · RIC Art. 5.5</p>
+            <p style={{ fontSize: '11px', color: 'var(--text3)' }}>RIC Art. 5.5</p>
           </div>
         )}
 
@@ -444,7 +444,7 @@ function CalculatorWithTabs() {
         flexShrink: 0,
       }}>
         <button style={tabStyle(tab === 'bt')} onClick={() => setTab('bt')}>
-          BT — NCh Elec 4/2003
+          BT — RIC
         </button>
         <button style={tabStyle(tab === 'mtat')} onClick={() => setTab('mtat')}>
           MT/AT — IEC 60502-2

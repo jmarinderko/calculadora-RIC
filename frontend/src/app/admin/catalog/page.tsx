@@ -8,7 +8,7 @@ const EMPTY: Partial<Conductor> = {
   proveedor: '', tipo: '', calibre_awg: '', seccion_mm2: undefined,
   material: 'cu', resistencia_dc_20: undefined, i_max_ducto: undefined,
   i_max_aire: undefined, tension_nom_v: 1000, temp_max_c: 75,
-  norma_ref: 'NCh Elec 4/2003', certificacion_sec: false, activo: true,
+  norma_ref: 'RIC', certificacion_sec: false, activo: true,
 }
 
 function Input({ label, value, onChange, type = 'text' }: {

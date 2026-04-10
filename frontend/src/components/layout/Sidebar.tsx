@@ -45,7 +45,7 @@ export function Sidebar() {
               Conductor<span style={{ color: 'var(--accent)' }}>.calc</span>
             </div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: 'var(--text3)' }}>
-              NCh Elec 4/2003
+              RIC
             </div>
           </div>
         </div>

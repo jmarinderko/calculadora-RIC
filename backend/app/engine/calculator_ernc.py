@@ -11,7 +11,7 @@ Normas de referencia:
   - IEC 60364-7-712     → Instalaciones fotovoltaicas
   - IEC 62548           → Diseño sistemas FV
   - EN 50618 / IEC 62930 → Cable solar ZZ-F
-  - NCh Elec 4/2003     → RIC Chile (tramos AC)
+  - RIC     → RIC Chile (tramos AC)
   - NTCO SEC (2020)     → Normativa técnica conexión obras (GD Chile)
   - NEC 690             → Referencia complementaria (EE.UU.)
 """
@@ -412,7 +412,7 @@ def calc_ac_inversor(inp: ERNCAcInversorInput) -> ERNCResponse:
     cumple_caida = dv_pct_final <= lim
 
     if ajustado_por_minimo:
-        advertencias.append("Sección mínima 4 mm² aplicada (NCh Elec 4 Art. 5.3.1 — alimentador).")
+        advertencias.append("Sección mínima 4 mm² aplicada (RIC Art. 5.3.1 — alimentador).")
     if ajustado_por_caida:
         advertencias.append(
             f"Sección aumentada por caída: ΔV = {round(dv_pct_final, 2)}% vs. límite {lim}%."
@@ -463,7 +463,7 @@ def calc_ac_inversor(inp: ERNCAcInversorInput) -> ERNCResponse:
 def calc_gd_red_bt(inp: ERNCGdRedBtInput) -> ERNCResponse:
     """
     Calcula conductor para conexión GD a red BT chilena.
-    Normativa: NTCO SEC (2020), NCh Elec 4/2003.
+    Normativa: NTCO SEC (2020), RIC.
 
     Requisitos adicionales NTCO:
     - Potencia inyectable ≤ 300 kW (instalación en BT simplificada)
@@ -717,7 +717,7 @@ def calc_baterias_dc(inp: ERNCBateriasDCInput) -> ERNCResponse:
     )
     advertencias.append(
         "Instalar fusible o interruptor DC en cada polo a máximo 0.5 m del banco de baterías "
-        "(IEC 62619 / NCh Elec 4 Art. 5.7)."
+        "(IEC 62619 / RIC Art. 5.7)."
     )
 
     resultado = ERNCResult(

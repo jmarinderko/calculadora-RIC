@@ -1,7 +1,7 @@
 """
 Template HTML para la Memoria Técnica SEC.
 Genera un documento formal para tramitar ante la Superintendencia de
-Electricidad y Combustibles (SEC) — NCh Elec 4/2003 (RIC).
+Electricidad y Combustibles (SEC) — RIC.
 """
 from __future__ import annotations
 from typing import Optional
@@ -302,7 +302,7 @@ def render_sec_memory(
   <div>
     <div class="cover-brand">RIC CONDUCTOR.CALC — NCh ELEC 4/2003</div>
     <div class="cover-title">Memoria Técnica de Cálculo<br>de Instalación Eléctrica</div>
-    <div class="cover-subtitle">Conforme RIC / NCh Elec 4/2003 — Chile</div>
+    <div class="cover-subtitle">Conforme RIC — Chile</div>
 
     <div class="cover-meta">
       <div class="cover-meta-item">
@@ -327,7 +327,7 @@ def render_sec_memory(
       </div>
       <div class="cover-meta-item">
         <div class="cover-meta-label">Normativa</div>
-        <div class="cover-meta-value">NCh Elec 4/2003 (RIC)</div>
+        <div class="cover-meta-value">RIC</div>
       </div>
     </div>
   </div>
@@ -350,7 +350,7 @@ def render_sec_memory(
     <tr><td>Fecha de cálculo</td><td class="val">{fecha}</td></tr>
     <tr><td>N° de circuitos calculados</td><td class="val">{demand.get('total_circuitos', 0)}</td></tr>
     <tr><td>Sistema predominante</td><td class="val" style="text-transform:capitalize">{demand.get('sistema_predominante','—')}</td></tr>
-    <tr><td>Normativa aplicable</td><td class="val">NCh Elec 4/2003 (RIC)</td></tr>
+    <tr><td>Normativa aplicable</td><td class="val">RIC</td></tr>
     <tr><td>Estándar de conductores</td><td class="val">IEC 60228 / NCh 23</td></tr>
     <tr><td>Factores de corrección</td><td class="val">RIC Tablas 5-3, 5-4 / IEC 60364-5-52</td></tr>
   </table>
@@ -429,7 +429,7 @@ def render_sec_memory(
     <p style="line-height:1.8;margin-bottom:16px;">
       El suscrito, <strong>{user_name}</strong>, en calidad de proyectista responsable, declara que los
       cálculos contenidos en la presente Memoria Técnica han sido realizados conforme a la normativa
-      vigente <strong>NCh Elec 4/2003 (Reglamento de Instalaciones de Consumidores — RIC)</strong>,
+      vigente <strong>RIC (Reglamento de Instalaciones de Consumidores)</strong>,
       aplicando las fórmulas, factores de corrección y secciones mínimas establecidas en dicho reglamento.
     </p>
 
@@ -452,7 +452,7 @@ def render_sec_memory(
   </div>
 
   <div class="page-footer">
-    <span>RIC Conductor.calc — NCh Elec 4/2003 · Memoria N° {numero_memoria} · {project_name}</span>
+    <span>RIC Conductor.calc — RIC · Memoria N° {numero_memoria} · {project_name}</span>
     <span>Generado el {fecha}</span>
   </div>
 </div>
