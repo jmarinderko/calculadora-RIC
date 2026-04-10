@@ -20,6 +20,22 @@ export async function GET() {
     backendHealth = { ok: false, error: err?.message ?? String(err) }
   }
 
+  // Test directo del endpoint Google Auth
+  let googleAuthTest: { ok: boolean; status?: number; body?: any; error?: string } = { ok: false }
+  try {
+    const res = await fetch(`${backendUrl}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'debug-test@ricconductor.cl', name: 'Debug Test' }),
+      signal: AbortSignal.timeout(5000),
+    })
+    let body: any
+    try { body = await res.json() } catch { body = null }
+    googleAuthTest = { ok: res.ok, status: res.status, body }
+  } catch (err: any) {
+    googleAuthTest = { ok: false, error: err?.message ?? String(err) }
+  }
+
   return NextResponse.json({
     session: {
       exists: !!session,
@@ -36,5 +52,6 @@ export async function GET() {
       backendUrlUsed: backendUrl,
     },
     backendHealth,
+    googleAuthTest,
   })
 }
