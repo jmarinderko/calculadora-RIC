@@ -13,6 +13,7 @@ import type {
   GroundingInput, GroundingResult,
   PowerFactorInput, PowerFactorResult,
   LightingInput, LightingResult,
+  ProjectTemplate,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -315,4 +316,15 @@ export async function calcPowerFactor(input: PowerFactorInput): Promise<PowerFac
 export async function calcLighting(input: LightingInput): Promise<LightingResult> {
   const res = await api.post<LightingResult>('/api/calc/lighting', input)
   return res.data
+}
+
+// ── Plantillas de Proyecto ────────────────────────────────────────────────────
+
+export async function getTemplates(): Promise<ProjectTemplate[]> {
+  const res = await api.get<ProjectTemplate[]>('/api/templates')
+  return res.data
+}
+
+export async function applyTemplate(project_id: string, template_id: string): Promise<void> {
+  await api.post('/api/templates/apply', { project_id, template_id })
 }
