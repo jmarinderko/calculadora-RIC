@@ -1,8 +1,13 @@
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -34,7 +39,24 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
+      // Login con Google
+      if (account?.provider === 'google' && profile?.email) {
+        const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+        try {
+          const res = await fetch(`${backendUrl}/api/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: profile.email, name: (profile as any).name }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            token.accessToken = data.access_token
+            token.isAdmin = data.is_admin ?? false
+          }
+        } catch { /* silencioso — token queda sin accessToken */ }
+      }
+      // Login con credenciales
       if (user) {
         token.accessToken = (user as any).accessToken
         token.email = user.email

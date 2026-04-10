@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
+import uuid
 
 from app.db.session import get_session
 from app.db.models import User
@@ -61,6 +62,35 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_session)):
     user = result.scalar_one_or_none()
     if not user or not verify_password(body.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+    token = create_access_token(str(user.id))
+    return TokenResponse(access_token=token, is_admin=user.is_admin)
+
+
+class GoogleAuthRequest(BaseModel):
+    email: EmailStr
+    name: str | None = None
+
+
+@router.post("/google", response_model=TokenResponse)
+async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_session)):
+    """Crea o recupera un usuario autenticado con Google y retorna JWT."""
+    result = await db.execute(select(User).where(User.email == body.email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        # Crear usuario sin contraseña (usa UUID aleatorio como placeholder)
+        user = User(
+            email=body.email,
+            hashed_password=hash_password(str(uuid.uuid4())),
+            full_name=body.name,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+    if not user.is_active:
+        raise HTTPException(status_code=401, detail="Cuenta desactivada")
 
     token = create_access_token(str(user.id))
     return TokenResponse(access_token=token, is_admin=user.is_admin)
