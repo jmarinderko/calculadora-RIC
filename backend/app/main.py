@@ -10,8 +10,13 @@ from app.db.session import init_db
 from app.api.routes import health, auth, calc, projects, unifilar, reports
 from app.api.routes import calc_mtat
 from app.api.routes import calc_ernc
+from app.api.routes import calc_tree
+from app.api.routes import calc_grounding
+from app.api.routes import calc_pf
+from app.api.routes import calc_lighting
 from app.api.routes import admin
 from app.api.routes import profile, share, exports
+from app.api.routes import templates
 
 
 @asynccontextmanager
@@ -76,6 +81,10 @@ app.include_router(calc.router, prefix="/api/calc", tags=["calculator"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(calc_mtat.router, prefix="/api/calc", tags=["calculator-mtat"])
 app.include_router(calc_ernc.router, prefix="/api/calc", tags=["calculator-ernc"])
+app.include_router(calc_tree.router, prefix="/api/calc", tags=["calculator-tree"])
+app.include_router(calc_grounding.router, prefix="/api/calc", tags=["calculator-grounding"])
+app.include_router(calc_pf.router, prefix="/api/calc", tags=["calculator-pf"])
+app.include_router(calc_lighting.router, prefix="/api/calc", tags=["calculator-lighting"])
 app.include_router(unifilar.router, prefix="/api/unifilar", tags=["unifilar"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
@@ -83,3 +92,4 @@ app.include_router(profile.router, prefix="/api/users/profile", tags=["profile"]
 app.include_router(share.router, prefix="/api/calculations", tags=["share"])
 app.include_router(share.router, prefix="/api/share", tags=["share-public"])
 app.include_router(exports.router, prefix="/api/exports", tags=["exports"])
+app.include_router(templates.router, prefix="/api/templates", tags=["templates"])

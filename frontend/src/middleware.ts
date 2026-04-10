@@ -9,5 +9,13 @@ export const config = {
     '/profile',
     '/admin/:path*',
     '/admin',
+    '/voltage-drop-tree/:path*',
+    '/voltage-drop-tree',
+    '/grounding',
+    '/grounding/:path*',
+    '/power-factor',
+    '/power-factor/:path*',
+    '/lighting',
+    '/lighting/:path*',
   ],
 }

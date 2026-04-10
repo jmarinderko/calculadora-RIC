@@ -4,10 +4,14 @@ import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
-  { href: '/calculator', label: 'Calculadora', icon: '⚡' },
-  { href: '/projects',   label: 'Proyectos',   icon: '⊟' },
-  { href: '/profile',    label: 'Perfil',      icon: '◎' },
+  { href: '/dashboard',          label: 'Dashboard',  icon: '⊞' },
+  { href: '/calculator',         label: 'Calculadora', icon: '⚡' },
+  { href: '/projects',           label: 'Proyectos',   icon: '⊟' },
+  { href: '/voltage-drop-tree',  label: 'Árbol ΔV',    icon: '⋮' },
+  { href: '/grounding',          label: 'Puesta a Tierra', icon: '⏚' },
+  { href: '/power-factor',       label: 'Factor de Potencia', icon: '⊕' },
+  { href: '/lighting',           label: 'Iluminación', icon: '☀' },
+  { href: '/profile',            label: 'Perfil',      icon: '◎' },
 ]
 
 export function Sidebar() {

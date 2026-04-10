@@ -9,6 +9,11 @@ import type {
   AdminStats, AdminUser, Conductor, UsageCharts,
   UserProfile, ProfileUpdate, ShareResponse, PublicCalculation,
   DemandaSummary,
+  VoltageDropTreeInput, VoltageDropTreeResult,
+  GroundingInput, GroundingResult,
+  PowerFactorInput, PowerFactorResult,
+  LightingInput, LightingResult,
+  ProjectTemplate,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -268,6 +273,13 @@ export async function exportXlsx(calculationId: string, filename = 'calculo_RIC.
   URL.revokeObjectURL(url)
 }
 
+// ── Voltage Drop Tree ─────────────────────────────────────────────────────────
+
+export async function calcVoltageDropTree(input: VoltageDropTreeInput): Promise<VoltageDropTreeResult> {
+  const res = await api.post<VoltageDropTreeResult>('/api/calc/voltage-drop-tree', input)
+  return res.data
+}
+
 // ── Unifilar ──────────────────────────────────────────────────────────────────
 
 /**
@@ -283,4 +295,36 @@ export async function getUnifilar(
     headers: { Accept: 'image/svg+xml' },
   })
   return res.data as string
+}
+
+// ── Grounding ─────────────────────────────────────────────────────────────────
+
+export async function calcGrounding(input: GroundingInput): Promise<GroundingResult> {
+  const res = await api.post<GroundingResult>('/api/calc/grounding', input)
+  return res.data
+}
+
+// ── Power Factor ──────────────────────────────────────────────────────────────
+
+export async function calcPowerFactor(input: PowerFactorInput): Promise<PowerFactorResult> {
+  const res = await api.post<PowerFactorResult>('/api/calc/power-factor', input)
+  return res.data
+}
+
+// ── Lighting / Iluminación ────────────────────────────────────────────────────
+
+export async function calcLighting(input: LightingInput): Promise<LightingResult> {
+  const res = await api.post<LightingResult>('/api/calc/lighting', input)
+  return res.data
+}
+
+// ── Plantillas de Proyecto ────────────────────────────────────────────────────
+
+export async function getTemplates(): Promise<ProjectTemplate[]> {
+  const res = await api.get<ProjectTemplate[]>('/api/templates')
+  return res.data
+}
+
+export async function applyTemplate(project_id: string, template_id: string): Promise<void> {
+  await api.post('/api/templates/apply', { project_id, template_id })
 }
