@@ -36,8 +36,8 @@ def _apply_alembic_migrations(stamp_first: bool = False) -> None:
     import os
     import subprocess
 
-    # El alembic.ini está 3 directorios arriba de este archivo (raíz del backend)
-    cwd = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    # session.py está en /app/app/db/ → 2 niveles arriba = /app (raíz del backend)
+    cwd = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
     alembic_ini = os.path.join(cwd, 'alembic.ini')
 
     if not os.path.exists(alembic_ini):
