@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from contextlib import asynccontextmanager
+import re
 
 from app.config import settings
 from app.db.session import init_db
@@ -25,14 +28,40 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.backend_cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Orígenes CORS: lista fija + extra_cors_origins + subdominios Railway/Vercel automáticos
+_TRUSTED_PATTERNS = [
+    re.compile(r"https://.*\.up\.railway\.app$"),
+    re.compile(r"https://.*\.vercel\.app$"),
+    re.compile(r"https://.*\.railway\.app$"),
+]
+
+def _is_allowed_origin(origin: str) -> bool:
+    explicit = settings.backend_cors_origins + settings.extra_cors_origins
+    if origin in explicit:
+        return True
+    return any(p.match(origin) for p in _TRUSTED_PATTERNS)
+
+# Middleware CORS dinámico — evalúa el Origin de cada request
+class DynamicCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        origin = request.headers.get("origin", "")
+        allowed = _is_allowed_origin(origin) if origin else False
+
+        if request.method == "OPTIONS":
+            # Preflight
+            response = Response(status_code=200)
+        else:
+            response = await call_next(request)
+
+        if allowed:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept"
+            response.headers["Vary"] = "Origin"
+        return response
+
+app.add_middleware(DynamicCORSMiddleware)
 
 # Rutas
 app.include_router(health.router, prefix="/api", tags=["health"])

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
         "http://localhost:3000", "http://127.0.0.1:3000",
         "http://localhost:3001", "http://127.0.0.1:3001",
     ]
+    # Dominios adicionales permitidos (Railway, Vercel, custom domain)
+    extra_cors_origins: List[str] = []
 
     # Servicios
     pdf_service_url: str = "http://pdf-service:9000"
