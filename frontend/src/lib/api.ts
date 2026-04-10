@@ -9,6 +9,10 @@ import type {
   AdminStats, AdminUser, Conductor, UsageCharts,
   UserProfile, ProfileUpdate, ShareResponse, PublicCalculation,
   DemandaSummary,
+  VoltageDropTreeInput, VoltageDropTreeResult,
+  GroundingInput, GroundingResult,
+  PowerFactorInput, PowerFactorResult,
+  LightingInput, LightingResult,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
@@ -268,6 +272,13 @@ export async function exportXlsx(calculationId: string, filename = 'calculo_RIC.
   URL.revokeObjectURL(url)
 }
 
+// ── Voltage Drop Tree ─────────────────────────────────────────────────────────
+
+export async function calcVoltageDropTree(input: VoltageDropTreeInput): Promise<VoltageDropTreeResult> {
+  const res = await api.post<VoltageDropTreeResult>('/api/calc/voltage-drop-tree', input)
+  return res.data
+}
+
 // ── Unifilar ──────────────────────────────────────────────────────────────────
 
 /**
@@ -283,4 +294,18 @@ export async function getUnifilar(
     headers: { Accept: 'image/svg+xml' },
   })
   return res.data as string
+}
+
+// ── Grounding ─────────────────────────────────────────────────────────────────
+
+export async function calcGrounding(input: GroundingInput): Promise<GroundingResult> {
+  const res = await api.post<GroundingResult>('/api/calc/grounding', input)
+  return res.data
+}
+
+// ── Power Factor ──────────────────────────────────────────────────────────────
+
+export async function calcPowerFactor(input: PowerFactorInput): Promise<PowerFactorResult> {
+  const res = await api.post<PowerFactorResult>('/api/calc/power-factor', input)
+  return res.data
 }
