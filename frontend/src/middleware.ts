@@ -15,5 +15,7 @@ export const config = {
     '/grounding/:path*',
     '/power-factor',
     '/power-factor/:path*',
+    '/lighting',
+    '/lighting/:path*',
   ],
 }

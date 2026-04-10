@@ -592,3 +592,12 @@ export interface LightingResult {
   nivel_minimo_nch2_lux: number
   advertencias: string[]
 }
+
+// ── Plantillas de Proyecto ────────────────────────────────────────────────────
+
+export interface ProjectTemplate {
+  id: string
+  nombre: string
+  descripcion: string
+  num_circuitos: number
+}

@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/voltage-drop-tree',  label: 'Árbol ΔV',    icon: '⋮' },
   { href: '/grounding',          label: 'Puesta a Tierra', icon: '⏚' },
   { href: '/power-factor',       label: 'Factor de Potencia', icon: '⊕' },
+  { href: '/lighting',           label: 'Iluminación', icon: '☀' },
   { href: '/profile',            label: 'Perfil',      icon: '◎' },
 ]
 

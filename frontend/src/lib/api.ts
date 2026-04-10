@@ -309,3 +309,10 @@ export async function calcPowerFactor(input: PowerFactorInput): Promise<PowerFac
   const res = await api.post<PowerFactorResult>('/api/calc/power-factor', input)
   return res.data
 }
+
+// ── Lighting / Iluminación ────────────────────────────────────────────────────
+
+export async function calcLighting(input: LightingInput): Promise<LightingResult> {
+  const res = await api.post<LightingResult>('/api/calc/lighting', input)
+  return res.data
+}
