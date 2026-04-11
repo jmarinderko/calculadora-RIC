@@ -48,8 +48,7 @@ def _is_allowed_origin(origin: str) -> bool:
     # Cap defensivo sobre longitud antes de evaluar regex
     if not origin or len(origin) > _MAX_ORIGIN_LENGTH:
         return False
-    explicit = settings.backend_cors_origins + settings.extra_cors_origins
-    if origin in explicit:
+    if origin in settings.get_cors_origins():
         return True
     return any(p.match(origin) for p in _TRUSTED_PATTERNS)
 

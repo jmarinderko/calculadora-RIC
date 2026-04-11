@@ -1,30 +1,36 @@
 import json
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from typing import List
 
 
-def _parse_origins(value):
-    """Acepta lista Python, JSON array, o CSV/string simple.
+def _parse_origins(value) -> List[str]:
+    """Acepta lista, JSON array, CSV o string simple y devuelve una lista.
 
-    Railway (y otros PaaS) suelen inyectar variables como string plano. Pydantic
-    v2 por defecto intenta parsearlas como JSON y revienta si no lo son. Este
-    validator hace el formato tolerante: soporta `https://a.com,https://b.com`,
-    `["https://a.com"]` y `https://a.com`.
+    Railway (y otros PaaS) inyectan variables como string plano. Pydantic
+    v2 por defecto intenta parsear campos `List[str]` como JSON y revienta
+    si no lo son. Para evitar ese problema declaramos los campos como `str`
+    y parseamos manualmente con este helper. Soporta:
+
+      - ``["https://a.com","https://b.com"]`` (JSON array)
+      - ``https://a.com,https://b.com`` (CSV)
+      - ``https://a.com`` (string único)
+      - ``[]`` / ``""`` / None → lista vacía
     """
     if value is None or value == "":
         return []
     if isinstance(value, list):
-        return value
-    if isinstance(value, str):
-        s = value.strip()
-        if s.startswith("["):
-            try:
-                return json.loads(s)
-            except json.JSONDecodeError:
-                pass
-        return [item.strip() for item in s.split(",") if item.strip()]
-    return value
+        return [str(x) for x in value]
+    s = str(value).strip()
+    if not s:
+        return []
+    if s.startswith("["):
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                return [str(x) for x in parsed]
+        except json.JSONDecodeError:
+            pass
+    return [item.strip() for item in s.split(",") if item.strip()]
 
 
 class Settings(BaseSettings):
@@ -42,12 +48,16 @@ class Settings(BaseSettings):
     # Entorno
     environment: str = "development"
     log_level: str = "DEBUG"
-    backend_cors_origins: List[str] = [
-        "http://localhost:3000", "http://127.0.0.1:3000",
-        "http://localhost:3001", "http://127.0.0.1:3001",
-    ]
+
+    # CORS: guardados como string crudo para tolerar cualquier formato
+    # inyectado por el PaaS (JSON, CSV, o valor único). Los getters de abajo
+    # los exponen como lista parseada.
+    backend_cors_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "http://localhost:3001,http://127.0.0.1:3001"
+    )
     # Dominios adicionales permitidos (Railway, Vercel, custom domain)
-    extra_cors_origins: List[str] = []
+    extra_cors_origins: str = ""
 
     # Servicios
     pdf_service_url: str = "http://pdf-service:9000"
@@ -61,10 +71,9 @@ class Settings(BaseSettings):
     from_email: str = "noreply@ricconductor.cl"
     app_url: str = "http://localhost:3001"
 
-    @field_validator("backend_cors_origins", "extra_cors_origins", mode="before")
-    @classmethod
-    def _validate_origins(cls, v):
-        return _parse_origins(v)
+    def get_cors_origins(self) -> List[str]:
+        """Lista combinada de orígenes CORS explícitos (base + extra)."""
+        return _parse_origins(self.backend_cors_origins) + _parse_origins(self.extra_cors_origins)
 
     class Config:
         env_file = ".env"
