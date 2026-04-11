@@ -11,7 +11,7 @@ export default function LandingNavbar() {
       position: 'sticky',
       top: 0,
       zIndex: 50,
-      background: 'rgba(13,17,23,0.85)',
+      background: 'rgba(13,17,23,0.9)',
       backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--border)',
     }}>
@@ -23,9 +23,10 @@ export default function LandingNavbar() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 16,
       }}>
         {/* Logo */}
-        <Link href="/" style={{ textDecoration: 'none' }}>
+        <Link href="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontWeight: 600,
@@ -37,8 +38,34 @@ export default function LandingNavbar() {
           </span>
         </Link>
 
-        {/* Nav links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Anchor links — hidden on small screens */}
+        <div style={{
+          display: 'flex',
+          gap: 4,
+          flex: 1,
+          justifyContent: 'center',
+        }}>
+          {[
+            { href: '#funcionalidades', label: 'Funcionalidades' },
+            { href: '#precios', label: 'Precios' },
+            { href: '#faq', label: 'FAQ' },
+          ].map(({ href, label }) => (
+            <Link key={label} href={href} style={{
+              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontSize: 13,
+              color: 'var(--text3)',
+              padding: '6px 12px',
+              borderRadius: 'var(--r)',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}>
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Auth CTAs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {session ? (
             <Link href="/dashboard" style={{
               fontFamily: "'IBM Plex Mono', monospace",
@@ -49,6 +76,7 @@ export default function LandingNavbar() {
               background: 'var(--accent)',
               color: '#000',
               textDecoration: 'none',
+              whiteSpace: 'nowrap',
             }}>
               Ir al dashboard →
             </Link>
@@ -63,6 +91,7 @@ export default function LandingNavbar() {
                 textDecoration: 'none',
                 border: '1px solid var(--border)',
                 background: 'transparent',
+                whiteSpace: 'nowrap',
               }}>
                 Iniciar sesión
               </Link>
@@ -75,6 +104,7 @@ export default function LandingNavbar() {
                 background: 'var(--accent)',
                 color: '#000',
                 textDecoration: 'none',
+                whiteSpace: 'nowrap',
               }}>
                 Comenzar gratis
               </Link>
