@@ -9,6 +9,7 @@ from app.db.models import User
 from app.core.security import hash_password, verify_password, create_access_token
 from app.api.deps import get_current_user
 from app.services.email import send_welcome_email
+from app.config import settings
 
 router = APIRouter()
 
@@ -73,11 +74,19 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_session)):
 class GoogleAuthRequest(BaseModel):
     email: EmailStr
     name: str | None = None
+    internal_token: str | None = None  # secret compartido NextAuth → Backend
 
 
 @router.post("/google", response_model=TokenResponse)
 async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_session)):
-    """Crea o recupera un usuario autenticado con Google y retorna JWT."""
+    """Crea o recupera un usuario autenticado con Google y retorna JWT.
+
+    Requiere internal_token == settings.internal_api_secret cuando este está configurado,
+    para evitar que terceros puedan hacer account takeover llamando directamente al endpoint.
+    """
+    secret = settings.internal_api_secret
+    if secret and body.internal_token != secret:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No autorizado")
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
 

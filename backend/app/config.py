@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # Servicios
     pdf_service_url: str = "http://pdf-service:9000"
 
+    # Seguridad server-to-server: NextAuth → Backend (Google OAuth)
+    # Debe ser igual en backend (INTERNAL_API_SECRET) y frontend (INTERNAL_API_SECRET)
+    internal_api_secret: str = ""
+
     # Email (Resend — dejar vacío para deshabilitar)
     resend_api_key: str = ""
     from_email: str = "noreply@ricconductor.cl"
