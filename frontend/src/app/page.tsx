@@ -8,7 +8,7 @@ const features = [
     icon: '⚡',
     title: 'Motor RIC Baja Tensión',
     desc: 'Cálculo térmico Art. 5.3 con factores Ft, Fg, Fa. 7 tipos de canalización, sistemas mono/bi/trifásico, estrés térmico IEC 60949.',
-    tag: 'RIC',
+    tag: 'RIC Art. 5.3',
   },
   {
     icon: '🔌',
@@ -23,6 +23,30 @@ const features = [
     tag: 'Generación distribuida',
   },
   {
+    icon: '🌳',
+    title: 'Árbol de Caída de Tensión',
+    desc: 'Análisis de red ramificada con cálculo acumulativo de ΔV por tramo. Mono y trifásico. Identifica el tramo más crítico.',
+    tag: 'Red ramificada',
+  },
+  {
+    icon: '⏚',
+    title: 'Puesta a Tierra',
+    desc: 'Diseño de electrodos de jabalina, malla y cable horizontal conforme RIC. Verifica resistencia máxima admisible.',
+    tag: 'RIC / IEC 60364',
+  },
+  {
+    icon: '⊕',
+    title: 'Factor de Potencia',
+    desc: 'Cálculo de banco de condensadores para corrección de FP. Selección de banco estándar, ahorro energético y reducción de penalización.',
+    tag: 'Corrección FP',
+  },
+  {
+    icon: '💡',
+    title: 'Iluminación Zonal',
+    desc: 'Método de cavidades zonales para recintos interiores. Cálculo de luminarias necesarias conforme niveles mínimos NCh.',
+    tag: 'NCh iluminación',
+  },
+  {
     icon: '📄',
     title: 'PDF Memoria de Cálculo',
     desc: 'Exporta la memoria de cálculo en formato oficial SEC con todos los parámetros, resultados y referencias normativas.',
@@ -31,14 +55,32 @@ const features = [
   {
     icon: '📐',
     title: 'Diagrama Unifilar SVG',
-    desc: 'Generación automática del diagrama unifilar desde los resultados del cálculo. Exporta en SVG o PNG con simbología IEC.',
+    desc: 'Generación automática del diagrama unifilar desde los resultados del cálculo. Exporta en SVG con simbología IEC.',
     tag: 'Generación automática',
   },
   {
     icon: '📁',
     title: 'Proyectos e Historial',
-    desc: 'Organiza tus cálculos por proyecto. Historial completo con inputs y resultados. Acceso desde cualquier dispositivo.',
+    desc: 'Organiza tus cálculos por proyecto con plantillas predefinidas. Historial completo accesible desde cualquier dispositivo.',
     tag: 'Multi-proyecto',
+  },
+]
+
+const steps = [
+  {
+    num: '01',
+    title: 'Ingresa los parámetros',
+    desc: 'Potencia, tensión, tipo de instalación, material del conductor y condiciones de montaje. El formulario guía cada campo.',
+  },
+  {
+    num: '02',
+    title: 'Motor RIC calcula',
+    desc: 'El motor aplica los criterios de corriente admisible y caída de tensión del reglamento RIC y entrega la sección mínima.',
+  },
+  {
+    num: '03',
+    title: 'Exporta la memoria',
+    desc: 'Descarga la memoria de cálculo en PDF con formato SEC, diagrama unifilar SVG y tabla de resultados en Excel.',
   },
 ]
 
@@ -51,7 +93,7 @@ const plans = [
     borderColor: 'var(--border)',
     items: [
       '3 proyectos activos',
-      'Cálculo BT, MT/AT, ERNC',
+      'Todos los módulos de cálculo',
       'Diagrama unifilar SVG',
       'Historial 7 días',
       'Sin exportación PDF',
@@ -68,7 +110,7 @@ const plans = [
     borderColor: 'var(--accent)',
     items: [
       'Proyectos ilimitados',
-      'Cálculo BT, MT/AT, ERNC',
+      'Todos los módulos de cálculo',
       'Diagrama unifilar SVG',
       'Historial 90 días',
       'PDF Memoria SEC incluido',
@@ -93,6 +135,41 @@ const plans = [
     cta: 'Contactar',
     href: '/register',
     highlight: false,
+  },
+]
+
+const faqs = [
+  {
+    q: '¿Qué normativa aplica la calculadora?',
+    a: 'Aplica el Reglamento de Instalaciones de Consumidores (RIC) vigente en Chile, emitido por la SEC. Para iluminación se referencian los niveles mínimos de la normativa NCh correspondiente. El motor BT implementa el Art. 5.3 del RIC.',
+  },
+  {
+    q: '¿Los cálculos son válidos para presentar ante la SEC?',
+    a: 'La herramienta genera la memoria de cálculo en el formato requerido por la SEC. El ingeniero proyectista es responsable de revisar y firmar los documentos. RIC Conductor automatiza los cálculos pero no reemplaza la firma profesional.',
+  },
+  {
+    q: '¿Qué tipos de instalación puedo calcular?',
+    a: 'Baja tensión (BT), media y alta tensión (MT/AT), sistemas ERNC/fotovoltaicos, redes ramificadas con árbol de caída de tensión, sistemas de puesta a tierra (jabalina, malla, cable horizontal), corrección de factor de potencia e iluminación interior.',
+  },
+  {
+    q: '¿Puedo usar la herramienta gratis?',
+    a: 'Sí. El plan Free incluye todos los módulos de cálculo, diagrama unifilar SVG e historial de 7 días para hasta 3 proyectos. Para exportar PDF de memoria SEC se requiere plan Pro.',
+  },
+  {
+    q: '¿La plataforma funciona en dispositivos móviles?',
+    a: 'Sí, la interfaz es responsiva y funciona en tablets y smartphones. Para trabajo profesional intensivo recomendamos pantalla de escritorio.',
+  },
+  {
+    q: '¿Cómo funciona el cálculo de árbol de caída de tensión?',
+    a: 'Permite definir múltiples tramos en serie/paralelo con su longitud, sección, corriente y sistema (mono/trifásico). El motor calcula la caída acumulada por tramo e identifica los tramos que superan el límite RIC.',
+  },
+  {
+    q: '¿Qué incluye la exportación de PDF?',
+    a: 'La memoria de cálculo PDF incluye: datos del proyecto, parámetros de entrada, factores de corrección aplicados, cálculo de corriente admisible, cálculo de caída de tensión, sección recomendada y referencias normativas RIC.',
+  },
+  {
+    q: '¿Puedo compartir mis proyectos con otros ingenieros?',
+    a: 'Sí. Los cálculos pueden compartirse mediante un enlace público temporal. El plan Enterprise permite equipos de hasta 20 usuarios con proyectos compartidos.',
   },
 ]
 
@@ -143,37 +220,41 @@ export default function LandingPage() {
       <LandingNavbar />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section style={{
-        maxWidth: 1100,
-        margin: '0 auto',
-        padding: '80px 24px 72px',
-        textAlign: 'center',
-      }}>
-        <Tag color="var(--accent)">RIC Chile</Tag>
+      <section
+        id="inicio"
+        style={{
+          maxWidth: 1100,
+          margin: '0 auto',
+          padding: '80px 24px 72px',
+          textAlign: 'center',
+        }}
+      >
+        <Tag color="var(--accent)">RIC Chile — Conforme norma vigente</Tag>
 
         <h1 style={{
           fontFamily: "'IBM Plex Sans', sans-serif",
           fontWeight: 600,
-          fontSize: 'clamp(32px, 5vw, 52px)',
+          fontSize: 'clamp(30px, 5vw, 52px)',
           color: 'var(--text)',
           lineHeight: 1.15,
           margin: '20px 0 18px',
           letterSpacing: '-0.02em',
         }}>
-          Calculadora de Conductores<br />
-          <span style={{ color: 'var(--accent)' }}>Eléctricos para Proyectos SEC</span>
+          Calculadora de Conductores Eléctricos<br />
+          <span style={{ color: 'var(--accent)' }}>para Proyectos SEC Chile</span>
         </h1>
 
         <p style={{
           fontFamily: "'IBM Plex Sans', sans-serif",
           fontSize: 17,
           color: 'var(--text2)',
-          maxWidth: 560,
+          maxWidth: 580,
           margin: '0 auto 36px',
           lineHeight: 1.7,
         }}>
           Dimensionamiento de conductores BT, MT/AT y ERNC conforme a norma RIC.
-          Memoria de cálculo SEC en PDF. Para ingenieros eléctricos en Chile.
+          Puesta a tierra, factor de potencia, iluminación.
+          Memoria de cálculo SEC en PDF lista para presentar.
         </p>
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -189,7 +270,7 @@ export default function LandingPage() {
           }}>
             Comenzar gratis →
           </Link>
-          <Link href="/login" style={{
+          <Link href="#funcionalidades" style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: 14,
             padding: '12px 28px',
@@ -199,27 +280,27 @@ export default function LandingPage() {
             textDecoration: 'none',
             background: 'transparent',
           }}>
-            Ya tengo cuenta
+            Ver funcionalidades
           </Link>
         </div>
 
         {/* Stats */}
         <div style={{
           display: 'flex',
-          gap: 40,
+          gap: 48,
           justifyContent: 'center',
-          marginTop: 56,
+          marginTop: 60,
           flexWrap: 'wrap',
         }}>
           {[
-            { val: '~4.200', label: 'ingenieros eléctricos en Chile' },
-            { val: 'Art. 5.3', label: 'RIC RIC' },
-            { val: '3 módulos', label: 'BT · MT/AT · ERNC' },
+            { val: '10+', label: 'módulos de cálculo' },
+            { val: 'RIC', label: 'norma vigente Chile' },
+            { val: 'PDF', label: 'memoria SEC oficial' },
           ].map(({ val, label }) => (
-            <div key={val} style={{ textAlign: 'center' }}>
+            <div key={label} style={{ textAlign: 'center' }}>
               <div style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: 600,
                 color: 'var(--accent)',
               }}>{val}</div>
@@ -234,11 +315,119 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Divider ──────────────────────────────────────────────────────── */}
+      {/* ── Trust bar ────────────────────────────────────────────────────── */}
+      <div style={{
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg2)',
+        padding: '12px 24px',
+      }}>
+        <div style={{
+          maxWidth: 900,
+          margin: '0 auto',
+          display: 'flex',
+          gap: 32,
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}>
+          {[
+            'Motor nativo RIC',
+            'BT · MT/AT · ERNC',
+            'Puesta a tierra IEC',
+            'Memoria SEC en PDF',
+            'Árbol caída de tensión',
+            'Sin instalación',
+          ].map((label) => (
+            <span
+              key={label}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11,
+                color: 'var(--text3)',
+                letterSpacing: '0.06em',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              ✓ {label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Cómo funciona ─────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <Tag>Flujo de trabajo</Tag>
+          <h2 style={{
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontWeight: 600,
+            fontSize: 28,
+            color: 'var(--text)',
+            margin: '14px 0 8px',
+            letterSpacing: '-0.01em',
+          }}>
+            De parámetros a memoria SEC en minutos
+          </h2>
+          <p style={{
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontSize: 15,
+            color: 'var(--text3)',
+          }}>
+            Sin hojas de cálculo, sin errores manuales
+          </p>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: 16,
+        }}>
+          {steps.map((step) => (
+            <div key={step.num} style={{
+              background: 'var(--bg2)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--r)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}>
+              <span style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: 11,
+                fontWeight: 600,
+                color: 'var(--accent)',
+                letterSpacing: '0.1em',
+              }}>
+                {step.num}
+              </span>
+              <div style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: 15,
+                color: 'var(--text)',
+              }}>
+                {step.title}
+              </div>
+              <p style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: 13,
+                color: 'var(--text2)',
+                lineHeight: 1.65,
+                margin: 0,
+              }}>
+                {step.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
+      <section id="funcionalidades" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <Tag>Funcionalidades</Tag>
           <h2 style={{
@@ -293,11 +482,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Divider ──────────────────────────────────────────────────────── */}
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
+      <section id="precios" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <Tag>Planes</Tag>
           <h2 style={{
@@ -406,7 +594,55 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Divider ──────────────────────────────────────────────────────── */}
+      <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
+
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section id="faq" style={{ maxWidth: 760, margin: '0 auto', padding: '72px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <Tag>FAQ</Tag>
+          <h2 style={{
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontWeight: 600,
+            fontSize: 28,
+            color: 'var(--text)',
+            margin: '14px 0 8px',
+            letterSpacing: '-0.01em',
+          }}>
+            Preguntas frecuentes
+          </h2>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {faqs.map((faq, i) => (
+            <div key={i} style={{
+              background: 'var(--bg2)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--r)',
+              padding: '20px 22px',
+            }}>
+              <div style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontWeight: 600,
+                fontSize: 14,
+                color: 'var(--text)',
+                marginBottom: 8,
+              }}>
+                {faq.q}
+              </div>
+              <p style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: 13,
+                color: 'var(--text2)',
+                lineHeight: 1.7,
+                margin: 0,
+              }}>
+                {faq.a}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 
       {/* ── CTA Final ────────────────────────────────────────────────────── */}
@@ -452,16 +688,53 @@ export default function LandingPage() {
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer style={{
         borderTop: '1px solid var(--border)',
-        padding: '24px',
-        textAlign: 'center',
+        padding: '28px 24px',
       }}>
-        <span style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 12,
-          color: 'var(--text3)',
+        <div style={{
+          maxWidth: 1100,
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16,
         }}>
-          RIC Conductor.calc — RIC · Hecho para ingenieros eléctricos en Chile
-        </span>
+          <span style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--text)',
+          }}>
+            RIC Conductor<span style={{ color: 'var(--accent)' }}>.calc</span>
+          </span>
+
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            {[
+              { href: '#funcionalidades', label: 'Funcionalidades' },
+              { href: '#precios', label: 'Precios' },
+              { href: '#faq', label: 'FAQ' },
+              { href: '/login', label: 'Iniciar sesión' },
+              { href: '/register', label: 'Registrarse' },
+            ].map(({ href, label }) => (
+              <Link key={label} href={href} style={{
+                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontSize: 12,
+                color: 'var(--text3)',
+                textDecoration: 'none',
+              }}>
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          <span style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 11,
+            color: 'var(--text3)',
+          }}>
+            Hecho para ingenieros eléctricos en Chile
+          </span>
+        </div>
       </footer>
     </div>
   )
