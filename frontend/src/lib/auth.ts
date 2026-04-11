@@ -56,7 +56,11 @@ export const authOptions: NextAuthOptions = {
             const res = await fetch(`${backendUrl}/api/auth/google`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: profile.email, name: (profile as any).name }),
+              body: JSON.stringify({
+                email: profile.email,
+                name: (profile as any).name,
+                internal_token: process.env.INTERNAL_API_SECRET ?? '',
+              }),
             })
             if (res.ok) {
               const data = await res.json()
