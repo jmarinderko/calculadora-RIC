@@ -12,6 +12,7 @@ from app.db.session import get_session
 from app.db.models import Calculation, Project
 from app.api.deps import get_current_user
 from app.db.models import User
+from app.core.security import sanitize_filename
 
 router = APIRouter()
 
@@ -160,7 +161,8 @@ async def export_xlsx(
     wb.save(buf)
     buf.seek(0)
 
-    filename = f"calculo_RIC_{calc.name or calc.id}.xlsx".replace(" ", "_")
+    safe_name = sanitize_filename(calc.name or str(calc.id), fallback="calculo", max_length=60)
+    filename = f"calculo_RIC_{safe_name}.xlsx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

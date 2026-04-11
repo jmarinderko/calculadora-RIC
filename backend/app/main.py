@@ -33,14 +33,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Orígenes CORS: lista fija + extra_cors_origins + subdominios Railway/Vercel automáticos
+# Orígenes CORS: lista fija + extra_cors_origins + subdominios Railway/Vercel automáticos.
+# Regex estrictas (sin `.*`) para evitar ReDoS y limitar a hostnames válidos.
+_HOST_CHARS = r"[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*"
 _TRUSTED_PATTERNS = [
-    re.compile(r"https://.*\.up\.railway\.app$"),
-    re.compile(r"https://.*\.vercel\.app$"),
-    re.compile(r"https://.*\.railway\.app$"),
+    re.compile(rf"^https://{_HOST_CHARS}\.up\.railway\.app$"),
+    re.compile(rf"^https://{_HOST_CHARS}\.vercel\.app$"),
+    re.compile(rf"^https://{_HOST_CHARS}\.railway\.app$"),
 ]
+_MAX_ORIGIN_LENGTH = 253 + len("https://")  # RFC 1035: hostname ≤253 chars
+
 
 def _is_allowed_origin(origin: str) -> bool:
+    # Cap defensivo sobre longitud antes de evaluar regex
+    if not origin or len(origin) > _MAX_ORIGIN_LENGTH:
+        return False
     explicit = settings.backend_cors_origins + settings.extra_cors_origins
     if origin in explicit:
         return True
@@ -73,6 +80,27 @@ class DynamicCORSMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(DynamicCORSMiddleware)
+
+
+# Headers HTTP de seguridad aplicados a todas las respuestas de la API.
+# Nota: HSTS solo se setea fuera de development — evita problemas con certs
+# self-signed locales.
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        if settings.environment != "development":
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            )
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Rutas
 app.include_router(health.router, prefix="/api", tags=["health"])

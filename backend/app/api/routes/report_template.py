@@ -2,7 +2,15 @@
 Generador del template HTML para memoria de cálculo SEC.
 Produce HTML auto-contenido (sin dependencias externas) listo para Puppeteer.
 """
+import html as _html
 from typing import Any
+
+
+def _esc(v: Any) -> str:
+    """Escapa un valor para inyección segura en HTML (XSS)."""
+    if v is None:
+        return "—"
+    return _html.escape(str(v), quote=True)
 
 
 # ── Mappings legibles ─────────────────────────────────────────────────────────
@@ -62,6 +70,15 @@ def render_html(
     Renderiza el HTML completo de la memoria de cálculo SEC.
     Todos los estilos son inline/interno para compatibilidad con Puppeteer.
     """
+    # Sanitización de campos controlados por el usuario (XSS). Los valores
+    # calculados por el backend (r, input_data) se consideran confiables para
+    # cifras numéricas; textos de usuario se escapan abajo.
+    calc_name = _esc(calc_name)
+    project_name = _esc(project_name)
+    project_location = _esc(project_location)
+    user_name = _esc(user_name)
+    calc_date = _esc(calc_date)
+
     inp = input_data
     r = result_data
     rc = r.get("radio_curvatura") or {}
@@ -116,7 +133,7 @@ def render_html(
     # Advertencias
     adv_html = ""
     if advertencias:
-        items = "".join(f"<li>{a}</li>" for a in advertencias)
+        items = "".join(f"<li>{_esc(a)}</li>" for a in advertencias)
         adv_html = f"""
         <div class="warn-box">
           <strong>Advertencias del cálculo:</strong>

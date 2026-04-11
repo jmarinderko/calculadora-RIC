@@ -1,8 +1,11 @@
+import secrets as secrets_module
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
-from pydantic import BaseModel, EmailStr
-import uuid
+from pydantic import BaseModel, EmailStr, Field
 
 from app.db.session import get_session
 from app.db.models import User
@@ -16,13 +19,13 @@ router = APIRouter()
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str
-    full_name: str | None = None
+    password: str = Field(min_length=8, max_length=128)
+    full_name: str | None = Field(default=None, max_length=200)
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=1, max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -51,7 +54,12 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_session
         full_name=body.full_name,
     )
     db.add(user)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Race: otro request creó el mismo email entre el SELECT y el INSERT
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="El email ya está registrado")
     await db.refresh(user)
 
     token = create_access_token(str(user.id))
@@ -85,7 +93,7 @@ async def google_auth(body: GoogleAuthRequest, db: AsyncSession = Depends(get_se
     para evitar que terceros puedan hacer account takeover llamando directamente al endpoint.
     """
     secret = settings.internal_api_secret
-    if secret and body.internal_token != secret:
+    if secret and not secrets_module.compare_digest(body.internal_token or "", secret):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No autorizado")
     result = await db.execute(select(User).where(User.email == body.email))
     user = result.scalar_one_or_none()
