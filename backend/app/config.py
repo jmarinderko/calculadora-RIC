@@ -1,5 +1,30 @@
+import json
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from typing import List
+
+
+def _parse_origins(value):
+    """Acepta lista Python, JSON array, o CSV/string simple.
+
+    Railway (y otros PaaS) suelen inyectar variables como string plano. Pydantic
+    v2 por defecto intenta parsearlas como JSON y revienta si no lo son. Este
+    validator hace el formato tolerante: soporta `https://a.com,https://b.com`,
+    `["https://a.com"]` y `https://a.com`.
+    """
+    if value is None or value == "":
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        s = value.strip()
+        if s.startswith("["):
+            try:
+                return json.loads(s)
+            except json.JSONDecodeError:
+                pass
+        return [item.strip() for item in s.split(",") if item.strip()]
+    return value
 
 
 class Settings(BaseSettings):
@@ -35,6 +60,11 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     from_email: str = "noreply@ricconductor.cl"
     app_url: str = "http://localhost:3001"
+
+    @field_validator("backend_cors_origins", "extra_cors_origins", mode="before")
+    @classmethod
+    def _validate_origins(cls, v):
+        return _parse_origins(v)
 
     class Config:
         env_file = ".env"
