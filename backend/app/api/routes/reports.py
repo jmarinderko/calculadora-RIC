@@ -4,10 +4,13 @@ Endpoints:
   POST /reports/{calculation_id}/generate   → genera el PDF y guarda el Report
   GET  /reports/{report_id}/download        → retorna el PDF binario
 """
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 import uuid
 import httpx
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
@@ -18,6 +21,7 @@ from app.config import settings
 from app.db.session import get_session
 from app.db.models import User, Calculation, Project, Report
 from app.api.deps import get_current_user
+from app.core.security import sanitize_filename
 from .report_template import render_html
 from .sec_memory_template import render_sec_memory
 
@@ -62,15 +66,22 @@ async def _call_pdf_service(html: str, filename: str) -> bytes:
             resp = await client.post(url, json={"html": html, "filename": filename})
             resp.raise_for_status()
             return resp.content
-    except httpx.ConnectError:
+    except httpx.ConnectError as exc:
+        # Log detalle internamente pero no exponerlo al cliente
+        logger.error("pdf-service unreachable at %s: %s", url, exc)
         raise HTTPException(
             status_code=503,
-            detail="Servicio PDF no disponible. Verifique que el contenedor ric_pdf esté corriendo.",
+            detail="Servicio de generación de PDF no disponible temporalmente.",
         )
     except httpx.HTTPStatusError as exc:
+        logger.error(
+            "pdf-service returned %s: %s",
+            exc.response.status_code,
+            exc.response.text[:500],
+        )
         raise HTTPException(
             status_code=502,
-            detail=f"Error en el servicio PDF: {exc.response.text}",
+            detail="Error generando el PDF. Intente nuevamente.",
         )
 
 
@@ -279,8 +290,9 @@ async def generate_sec_memory(
         numero_memoria=body.numero_memoria or "001",
     )
 
-    safe_name = project.name.replace(" ", "_")[:40]
-    filename = f"Memoria_SEC_{safe_name}_{body.numero_memoria or '001'}.pdf"
+    safe_name = sanitize_filename(project.name, fallback="proyecto", max_length=40)
+    safe_num = sanitize_filename(body.numero_memoria or "001", fallback="001", max_length=16)
+    filename = f"Memoria_SEC_{safe_name}_{safe_num}.pdf"
     pdf_bytes = await _call_pdf_service(html, filename)
 
     return Response(

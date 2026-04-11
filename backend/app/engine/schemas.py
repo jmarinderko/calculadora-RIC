@@ -8,12 +8,12 @@ class CalculatorInput(BaseModel):
     # Sistema eléctrico
     sistema: Literal["trifasico", "bifasico", "monofasico"] = "trifasico"
 
-    # Parámetros eléctricos
-    tension_v: float = Field(..., gt=0, description="Tensión de servicio en voltios")
-    potencia_kw: float = Field(..., gt=0, description="Potencia de la carga en kW")
+    # Parámetros eléctricos — límites defensivos para evitar inputs absurdos o DoS
+    tension_v: float = Field(..., gt=0, le=35000, description="Tensión de servicio en voltios (≤35 kV MT)")
+    potencia_kw: float = Field(..., gt=0, le=100000, description="Potencia de la carga en kW (≤100 MW)")
     factor_potencia: float = Field(0.85, ge=0.5, le=1.0, description="cos φ")
     factor_demanda: float = Field(1.0, ge=1.0, le=2.0, description="Factor de demanda RIC Art. 5.2")
-    longitud_m: float = Field(..., gt=0, description="Longitud del circuito en metros")
+    longitud_m: float = Field(..., gt=0, le=100000, description="Longitud del circuito en metros (≤100 km)")
 
     # Instalación
     material: Literal["cu", "al"] = "cu"
@@ -21,8 +21,8 @@ class CalculatorInput(BaseModel):
         "ducto_pvc", "ducto_metalico", "bandeja_perforada",
         "bandeja_escalera", "enterrado_directo", "enterrado_ducto", "aereo_libre"
     ] = "ducto_pvc"
-    temp_ambiente_c: int = Field(30, description="Temperatura ambiente °C")
-    circuitos_agrupados: int = Field(1, ge=1, description="Número de circuitos agrupados")
+    temp_ambiente_c: int = Field(30, ge=-20, le=90, description="Temperatura ambiente °C")
+    circuitos_agrupados: int = Field(1, ge=1, le=100, description="Número de circuitos agrupados")
     msnm: float = Field(0.0, ge=0, le=5500, description="Altitud de instalación msnm")
     montaje: Literal["vista", "banco", "oculto"] = "vista"
 

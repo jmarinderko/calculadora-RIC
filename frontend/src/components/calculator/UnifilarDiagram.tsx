@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { getUnifilar } from '@/lib/api'
 import type { CalculatorResponse, CalculatorInput } from '@/types'
 
@@ -10,6 +10,19 @@ interface Props {
 
 export function UnifilarDiagram({ result, input }: Props) {
   const [svgContent, setSvgContent] = useState<string | null>(null)
+  // Render el SVG vía <img src="data:image/svg+xml;..."/> en vez de
+  // dangerouslySetInnerHTML. Los data URLs en <img> corren en un contexto
+  // aislado: cualquier <script> embebido en el SVG NO se ejecuta, lo que
+  // neutraliza vectores de XSS aunque el SVG incluya strings controlados
+  // por el usuario (nombre de circuito, potencia, etc.).
+  const svgDataUrl = useMemo(() => {
+    if (!svgContent) return ''
+    try {
+      return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`
+    } catch {
+      return ''
+    }
+  }, [svgContent])
   const [open,       setOpen]       = useState(false)
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState('')
@@ -183,7 +196,7 @@ export function UnifilarDiagram({ result, input }: Props) {
               </div>
             </div>
 
-            {/* SVG inline */}
+            {/* SVG renderizado vía <img> data URL para aislar scripts (XSS-safe) */}
             <div
               style={{
                 width: '100%',
@@ -193,8 +206,16 @@ export function UnifilarDiagram({ result, input }: Props) {
                 border: '1px solid var(--border)',
                 padding: '4px',
               }}
-              dangerouslySetInnerHTML={{ __html: svgContent }}
-            />
+            >
+              {svgDataUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={svgDataUrl}
+                  alt="Diagrama unifilar RIC"
+                  style={{ display: 'block', width: '100%', height: 'auto' }}
+                />
+              )}
+            </div>
 
             {/* Footer info */}
             <div style={{

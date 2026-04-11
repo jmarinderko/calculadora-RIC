@@ -4,7 +4,15 @@ Genera un documento formal para tramitar ante la Superintendencia de
 Electricidad y Combustibles (SEC) — RIC.
 """
 from __future__ import annotations
-from typing import Optional
+import html as _html
+from typing import Any, Optional
+
+
+def _esc(v: Any) -> str:
+    """Escapa un valor para inyección segura en HTML (XSS)."""
+    if v is None:
+        return "—"
+    return _html.escape(str(v), quote=True)
 
 
 def _badge(cumple: bool) -> str:
@@ -34,6 +42,15 @@ def render_sec_memory(
     numero_memoria: str = "001",
 ) -> str:
 
+    # Sanitización de campos controlados por el usuario (XSS).
+    project_name = _esc(project_name)
+    project_location_raw = project_location
+    project_location = _esc(project_location) if project_location else None
+    project_description = _esc(project_description) if project_description else None
+    user_name = _esc(user_name)
+    fecha = _esc(fecha)
+    numero_memoria = _esc(numero_memoria)
+
     # ── Circuitos HTML ────────────────────────────────────────────────────────
     cuadro_rows = ""
     detalle_circuitos = ""
@@ -41,7 +58,7 @@ def render_sec_memory(
     for i, c in enumerate(calculations, 1):
         inp = c.get("input_data", {})
         res = c.get("result_data", {})
-        nombre = c.get("name") or f"Circuito {i}"
+        nombre = _esc(c.get("name") or f"Circuito {i}")
         cumple = res.get("cumple", False)
         prot = res.get("proteccion") or {}
         tm = prot.get("termomagnetico") or {}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import math
 import uuid
@@ -16,9 +16,9 @@ router = APIRouter()
 
 
 class ProjectCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-    location: Optional[str] = None
+    name: str = Field(min_length=1, max_length=200)
+    description: Optional[str] = Field(default=None, max_length=2000)
+    location: Optional[str] = Field(default=None, max_length=300)
 
 
 class ProjectOut(BaseModel):
@@ -31,7 +31,7 @@ class ProjectOut(BaseModel):
 
 
 class CalculationCreate(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(default=None, max_length=200)
     input_data: CalculatorInput
 
 
@@ -87,19 +87,25 @@ async def list_projects(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Project).where(Project.owner_id == current_user.id).order_by(Project.created_at.desc())
+    # Single query con LEFT JOIN + GROUP BY → elimina el N+1 anterior
+    # (antes: 1 query por todos los proyectos + 1 query extra por proyecto para contar cálculos).
+    count_col = func.count(Calculation.id).label("calc_count")
+    stmt = (
+        select(Project, count_col)
+        .outerjoin(Calculation, Calculation.project_id == Project.id)
+        .where(Project.owner_id == current_user.id)
+        .group_by(Project.id)
+        .order_by(Project.created_at.desc())
     )
-    projects = result.scalars().all()
-    out = []
-    for p in projects:
-        calc_res = await db.execute(select(Calculation).where(Calculation.project_id == p.id))
-        count = len(calc_res.scalars().all())
-        out.append(ProjectOut(
+    rows = (await db.execute(stmt)).all()
+    return [
+        ProjectOut(
             id=str(p.id), name=p.name, description=p.description,
-            location=p.location, created_at=p.created_at.isoformat(), calculation_count=count,
-        ))
-    return out
+            location=p.location, created_at=p.created_at.isoformat(),
+            calculation_count=int(count or 0),
+        )
+        for p, count in rows
+    ]
 
 
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)

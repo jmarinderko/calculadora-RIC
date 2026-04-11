@@ -475,3 +475,155 @@ def test_cors_empty_origin_rejected():
 def test_cors_http_unknown_rejected():
     """HTTP desde dominio desconocido no es confiable."""
     assert _is_allowed_origin("http://other-app.example.com") is False
+
+
+def test_cors_extreme_length_origin_rejected():
+    """Origin absurdamente largo (DoS) es rechazado sin evaluar regex."""
+    huge = "https://" + "a" * 10000 + ".up.railway.app"
+    assert _is_allowed_origin(huge) is False
+
+
+def test_cors_fake_railway_suffix_rejected():
+    """Un host tipo `evil.com/.up.railway.app` no debe matchear con regex estricta."""
+    # El `.` en el path no debe cruzar el boundary del hostname
+    assert _is_allowed_origin("https://evil.com#.up.railway.app") is False
+    assert _is_allowed_origin("https://evil.com/.up.railway.app") is False
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 6. FIXES P0 ADICIONALES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def test_jwt_bombing_oversized_token_rejected():
+    """CVE-2024-33664: tokens anormalmente largos son rechazados sin intentar decode."""
+    from fastapi import HTTPException
+    from app.core.security import decode_token, MAX_JWT_LENGTH
+    huge_token = "a." + ("b" * (MAX_JWT_LENGTH + 100)) + ".c"
+    with pytest.raises(HTTPException) as exc_info:
+        decode_token(huge_token)
+    assert exc_info.value.status_code == 401
+
+
+def test_sanitize_filename_strips_path_traversal():
+    """sanitize_filename elimina separadores de path y comillas."""
+    from app.core.security import sanitize_filename
+    assert "/" not in sanitize_filename("../../etc/passwd")
+    assert "\\" not in sanitize_filename("..\\..\\windows\\system32")
+    # Comillas rompen el header Content-Disposition
+    assert '"' not in sanitize_filename('foo"; rm -rf /;#.pdf')
+    # CR/LF enable header injection
+    out = sanitize_filename("evil\r\nX-Injected: yes")
+    assert "\r" not in out and "\n" not in out
+    # Fallback cuando todo se va
+    assert sanitize_filename("///") == "archivo"
+    assert sanitize_filename(None) == "archivo"
+    # Preserva caracteres seguros
+    assert sanitize_filename("proyecto_2026-04-10.pdf") == "proyecto_2026-04-10.pdf"
+
+
+def test_pdf_template_escapes_xss():
+    """render_html escapa HTML en campos controlados por el usuario."""
+    from app.api.routes.report_template import render_html
+    malicious = "<script>alert('xss')</script>"
+    html = render_html(
+        input_data={"sistema": "trifasico", "tension_v": 380, "potencia_kw": 10,
+                    "longitud_m": 50, "material": "cu", "tipo_canalizacion": "ducto_pvc",
+                    "tipo_circuito": "fuerza", "factor_potencia": 0.85, "factor_demanda": 1.0},
+        result_data={"seccion_mm2": 4.0, "cumple": True, "caida_pct": 1.5,
+                     "limite_caida_pct": 3.0, "i_diseno_a": 15.2, "i_max_corregida_a": 30.0,
+                     "factor_total": 1.0, "ft": 1.0, "fg": 1.0, "fa": 1.0,
+                     "sec_neutro_mm2": 4.0, "sec_tierra_mm2": 2.5,
+                     "calibre_awg": "12 AWG", "advertencias": [malicious]},
+        calc_name=malicious,
+        project_name=malicious,
+        project_location=malicious,
+        user_name=malicious,
+        calc_date="10/04/2026",
+    )
+    # El literal con tags ya no debe aparecer; debe estar escapado
+    assert "<script>alert" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_sec_memory_template_escapes_xss():
+    """render_sec_memory escapa HTML en campos controlados por el usuario."""
+    from app.api.routes.sec_memory_template import render_sec_memory
+    malicious = "<img src=x onerror=alert(1)>"
+    html = render_sec_memory(
+        project_name=malicious,
+        project_location=malicious,
+        project_description=malicious,
+        user_name=malicious,
+        demand={"total_circuitos": 0, "tasa_cumplimiento_pct": 0},
+        calculations=[],
+        fecha="10/04/2026",
+        numero_memoria="001",
+    )
+    assert "<img src=x onerror=alert(1)>" not in html
+    assert "&lt;img" in html
+
+
+@pytest.mark.asyncio
+async def test_register_password_min_length_enforced(db: AsyncSession):
+    """Password < 8 chars es rechazado por Field validator."""
+    client = TestClient(_make_app(db))
+    res = client.post("/api/auth/register", json={
+        "email": "short@example.com",
+        "password": "abc",
+    })
+    assert res.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_project_name_max_length_enforced(db: AsyncSession, user_a: User):
+    """Nombre de proyecto > 200 chars es rechazado."""
+    client = TestClient(_make_app(db))
+    res = client.post(
+        "/api/projects",
+        json={"name": "x" * 300},
+        headers=_bearer(user_a),
+    )
+    assert res.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_calculator_input_extreme_values_rejected(db: AsyncSession, user_a: User):
+    """Valores absurdos (potencia > 100 MW, longitud > 100 km) son rechazados."""
+    project = Project(owner_id=user_a.id, name="P", description="d", location="l")
+    db.add(project)
+    await db.commit()
+    await db.refresh(project)
+
+    client = TestClient(_make_app(db))
+    bad_input = {
+        "sistema": "trifasico", "tension_v": 380, "potencia_kw": 999999999,
+        "factor_potencia": 0.85, "factor_demanda": 1.0, "longitud_m": 50,
+        "material": "cu", "tipo_canalizacion": "ducto_pvc",
+        "temp_ambiente_c": 30, "circuitos_agrupados": 1, "msnm": 0,
+        "montaje": "vista", "tipo_circuito": "fuerza", "cables_por_fase": 0,
+    }
+    res = client.post(
+        f"/api/projects/{project.id}/calculations",
+        json={"name": "c", "input_data": bad_input},
+        headers=_bearer(user_a),
+    )
+    assert res.status_code == 422
+
+
+def test_security_headers_middleware_sets_headers():
+    """El middleware SecurityHeadersMiddleware agrega headers defensivos."""
+    from fastapi import FastAPI
+    from app.main import SecurityHeadersMiddleware
+
+    app = FastAPI()
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    @app.get("/ping")
+    async def ping():
+        return {"ok": True}
+
+    client = TestClient(app)
+    res = client.get("/ping")
+    assert res.headers.get("X-Content-Type-Options") == "nosniff"
+    assert res.headers.get("X-Frame-Options") == "DENY"
+    assert "strict-origin" in res.headers.get("Referrer-Policy", "")
