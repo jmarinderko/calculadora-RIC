@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultPanel } from '@/components/calculator/ResultPanel'
+import { ResultSummaryTable } from '@/components/calculator/ResultSummaryTable'
 import { UnifilarDiagram } from '@/components/calculator/UnifilarDiagram'
 import { MTATCalculatorForm } from '@/components/calculator/MTATCalculatorForm'
 import { ERNCCalculatorForm } from '@/components/calculator/ERNCCalculatorForm'
@@ -150,6 +151,11 @@ function CalculatorInner() {
 
         {result && (
           <div>
+            {/* Tabla resumen estilo RAVIT */}
+            {lastInput && (
+              <ResultSummaryTable result={result} input={lastInput} />
+            )}
+
             <ResultPanel
               result={result}
               input={lastInput ? {
@@ -449,14 +455,11 @@ function CalculatorWithTabs() {
         <button style={tabStyle(tab === 'mtat')} onClick={() => setTab('mtat')}>
           MT/AT — IEC 60502-2
         </button>
-        <button style={tabStyle(tab === 'ernc')} onClick={() => setTab('ernc')}>
-          ☀ ERNC / FV
-        </button>
+        {/* Tab ERNC oculto por solicitud del cliente */}
       </div>
       <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {tab === 'bt' && <CalculatorInner />}
         {tab === 'mtat' && <MTATTabInner />}
-        {tab === 'ernc' && <ERNCTabInner />}
       </div>
     </div>
   )
