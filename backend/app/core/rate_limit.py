@@ -22,13 +22,12 @@ def _is_test_env() -> bool:
     return settings.environment.lower() in ("test", "testing")
 
 
-# Storage URI: Redis en producción si está configurado, memoria local si no.
-# slowapi acepta tanto memory:// como redis://...
-_storage_uri = (
-    settings.redis_url
-    if settings.redis_url and not _is_test_env()
-    else "memory://"
-)
+# Storage en memoria local — simple y suficiente para una sola instancia
+# del backend. Si en el futuro se escala horizontalmente, migrar a:
+#   storage_uri=settings.redis_url
+# (verificar antes que el cliente redis síncrono está disponible y la URL
+# es accesible desde el container).
+_storage_uri = "memory://"
 
 
 limiter = Limiter(
