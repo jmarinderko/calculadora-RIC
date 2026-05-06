@@ -507,7 +507,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{
+        {/* <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: 16,
@@ -591,7 +591,7 @@ export default function LandingPage() {
               </Link>
             </div>
           ))}
-        </div>
+        </div> */}
       </section>
 
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
