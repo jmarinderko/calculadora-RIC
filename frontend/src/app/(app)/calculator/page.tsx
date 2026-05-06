@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
+import { useSidebar } from '@/components/layout/SidebarContext'
 import { CalculatorForm } from '@/components/calculator/CalculatorForm'
 import { ResultPanel } from '@/components/calculator/ResultPanel'
 import { ResultSummaryTable } from '@/components/calculator/ResultSummaryTable'
@@ -10,6 +11,33 @@ import { MTATCalculatorForm } from '@/components/calculator/MTATCalculatorForm'
 import { ERNCCalculatorForm } from '@/components/calculator/ERNCCalculatorForm'
 import { ERNCResultPanel } from '@/components/calculator/ERNCResultPanel'
 import { calcConductor, calcMtat, calcERNC, saveCalculation, getProjects, generateReport, downloadReportPdf } from '@/lib/api'
+
+// Estilos del split form/resultado — 2 columnas en desktop, stack en mobile
+function splitOuter(isMobile: boolean): React.CSSProperties {
+  return isMobile
+    ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }
+    : { display: 'grid', gridTemplateColumns: '420px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }
+}
+function splitOuterMtat(isMobile: boolean): React.CSSProperties {
+  return isMobile
+    ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflowY: 'auto' }
+    : { display: 'grid', gridTemplateColumns: '460px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }
+}
+function splitFormPane(isMobile: boolean): React.CSSProperties {
+  return {
+    borderRight: isMobile ? 'none' : '1px solid var(--border)',
+    borderBottom: isMobile ? '1px solid var(--border)' : 'none',
+    padding: isMobile ? '16px' : '24px',
+    overflowY: isMobile ? 'visible' : 'auto',
+    background: 'var(--bg2)',
+  }
+}
+function splitResultPane(isMobile: boolean): React.CSSProperties {
+  return {
+    padding: isMobile ? '16px' : '24px 32px',
+    overflowY: isMobile ? 'visible' : 'auto',
+  }
+}
 import type {
   CalculatorInput, CalculatorResponse, MtatInput, MtatResponse, Project,
   ERNCTopologia, ERNCStringDCInput, ERNCAcInversorInput,
@@ -26,6 +54,7 @@ type ERNCInputUnion =
 
 // ── Tab BT (original) ─────────────────────────────────────────────────────────
 function CalculatorInner() {
+  const { isMobile } = useSidebar()
   const searchParams = useSearchParams()
   const preselectedProjectId = searchParams.get('project')
 
@@ -106,20 +135,15 @@ function CalculatorInner() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+    <div style={splitOuter(isMobile)}>
 
       {/* ── Panel izquierdo: formulario ── */}
-      <div style={{
-        borderRight: '1px solid var(--border)',
-        padding: '24px',
-        overflowY: 'auto',
-        background: 'var(--bg2)',
-      }}>
+      <div style={splitFormPane(isMobile)}>
         <CalculatorForm onSubmit={handleCalculate} loading={loading} />
       </div>
 
       {/* ── Panel derecho: resultados ── */}
-      <div style={{ padding: '24px 32px', overflowY: 'auto' }}>
+      <div style={splitResultPane(isMobile)}>
         {!result && !loading && !error && (
           <div className="empty-state">
             <div className="empty-icon">⚡</div>
@@ -290,6 +314,7 @@ function CalculatorInner() {
 
 // ── Tab MT/AT ─────────────────────────────────────────────────────────────────
 function MTATTabInner() {
+  const { isMobile } = useSidebar()
   const [result,  setResult]  = useState<MtatResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
@@ -310,16 +335,11 @@ function MTATTabInner() {
   }, [])
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '460px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-      <div style={{
-        borderRight: '1px solid var(--border)',
-        padding: '24px',
-        overflowY: 'auto',
-        background: 'var(--bg2)',
-      }}>
+    <div style={splitOuterMtat(isMobile)}>
+      <div style={splitFormPane(isMobile)}>
         <MTATCalculatorForm onSubmit={handleCalculate} loading={loading} result={null} />
       </div>
-      <div style={{ padding: '24px 32px', overflowY: 'auto' }}>
+      <div style={splitResultPane(isMobile)}>
         {!result && !loading && !error && (
           <div className="empty-state">
             <div className="empty-icon">⚡</div>
@@ -356,6 +376,7 @@ function MTATTabInner() {
 
 // ── Tab ERNC/FV ───────────────────────────────────────────────────────────────
 function ERNCTabInner() {
+  const { isMobile } = useSidebar()
   const [result,  setResult]  = useState<ERNCResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
@@ -379,16 +400,11 @@ function ERNCTabInner() {
   }, [])
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-      <div style={{
-        borderRight: '1px solid var(--border)',
-        padding: '24px',
-        overflowY: 'auto',
-        background: 'var(--bg2)',
-      }}>
+    <div style={splitOuter(isMobile)}>
+      <div style={splitFormPane(isMobile)}>
         <ERNCCalculatorForm onSubmit={handleCalculate} loading={loading} />
       </div>
-      <div style={{ padding: '24px 32px', overflowY: 'auto' }}>
+      <div style={splitResultPane(isMobile)}>
         {!result && !loading && !error && (
           <div className="empty-state">
             <div className="empty-icon">☀</div>

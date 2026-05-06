@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { getProjects, createProject, updateProject, deleteProject, getTemplates, applyTemplate } from '@/lib/api'
@@ -31,6 +31,11 @@ export default function ProjectsPage() {
   const [templateProjectName, setTemplateProjectName] = useState('')
   const [applyingTemplate, setApplyingTemplate] = useState(false)
 
+  // Locks síncronos — protegen contra doble-tap en mobile (más rápidos que el
+  // estado de React, que necesita un re-render para deshabilitar el botón).
+  const savingRef = useRef(false)
+  const applyingTemplateRef = useRef(false)
+
   async function load() {
     setLoading(true)
     try {
@@ -61,6 +66,8 @@ export default function ProjectsPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    if (savingRef.current) return
+    savingRef.current = true
     setError('')
     setSaving(true)
     try {
@@ -74,6 +81,7 @@ export default function ProjectsPage() {
     } catch {
       setError('Error al guardar el proyecto')
     } finally {
+      savingRef.current = false
       setSaving(false)
     }
   }
@@ -116,6 +124,8 @@ export default function ProjectsPage() {
   async function handleApplyTemplate(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedTemplate || !templateProjectName.trim()) return
+    if (applyingTemplateRef.current) return
+    applyingTemplateRef.current = true
     setError('')
     setApplyingTemplate(true)
     try {
@@ -128,6 +138,7 @@ export default function ProjectsPage() {
     } catch {
       setError('Error al crear el proyecto con plantilla')
     } finally {
+      applyingTemplateRef.current = false
       setApplyingTemplate(false)
     }
   }

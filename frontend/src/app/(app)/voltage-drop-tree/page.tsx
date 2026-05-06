@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { Header } from '@/components/layout/Header'
 import { calcVoltageDropTree } from '@/lib/api'
 import type { TramoInput, VoltageDropTreeInput, VoltageDropTreeResult } from '@/types'
 
@@ -81,15 +82,18 @@ export default function VoltageDropTreePage() {
   }
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', fontFamily: "'IBM Plex Sans', sans-serif" }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: 600, margin: 0 }}>
-          Árbol de Caída de Tensión
-        </h1>
-        <p style={{ color: '#8B949E', fontSize: '13px', marginTop: '6px' }}>
-          Caída acumulada por red de distribución — RIC Art. 5.5.4. Límite total: 5%.
-        </p>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <Header title="Árbol de Caída de Tensión" />
+      <main style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '24px', maxWidth: '1400px', fontFamily: "'IBM Plex Sans', sans-serif" }}>
+          <div style={{ marginBottom: '20px' }}>
+            <h1 style={{ color: '#E6EDF3', fontSize: '22px', fontWeight: 600, margin: 0 }}>
+              Árbol de Caída de Tensión
+            </h1>
+            <p style={{ color: '#8B949E', fontSize: '13px', marginTop: '6px' }}>
+              Caída acumulada por red de distribución — RIC Art. 5.5.4. Límite total: 5%.
+            </p>
+          </div>
 
       <form onSubmit={handleSubmit}>
         {/* Tensión origen */}
@@ -353,6 +357,8 @@ export default function VoltageDropTreePage() {
           </div>
         </div>
       )}
+        </div>
+      </main>
     </div>
   )
 }

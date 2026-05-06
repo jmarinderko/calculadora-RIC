@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { getProjects, getCalculations, shareCalculation, exportXlsx, getDemandSummary, downloadSecMemory } from '@/lib/api'
+import { copyToClipboard, isNativePlatform } from '@/lib/platform'
 import type { Project, Calculation, DemandaSummary } from '@/types'
 
 export default function ProjectDetailPage() {
@@ -17,6 +18,8 @@ export default function ProjectDetailPage() {
   const [loadingDemand, setLoadingDemand] = useState(false)
   const [generatingMemoria, setGeneratingMemoria] = useState(false)
   const [actionMsg, setActionMsg] = useState<string | null>(null)
+  // URL para mostrar en modal cuando el clipboard no funciona (mobile sin permisos)
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -201,9 +204,14 @@ export default function ProjectDetailPage() {
                       try {
                         const { share_url } = await shareCalculation(c.id)
                         const full = window.location.origin + share_url
-                        await navigator.clipboard.writeText(full)
-                        setActionMsg('Link copiado al portapapeles.')
-                        setTimeout(() => setActionMsg(null), 3000)
+                        const ok = await copyToClipboard(full)
+                        if (ok) {
+                          setActionMsg('Link copiado al portapapeles.')
+                          setTimeout(() => setActionMsg(null), 3000)
+                        } else {
+                          // Mobile sin clipboard accesible: mostrar URL en modal
+                          setShareUrl(full)
+                        }
                       } catch {
                         setActionMsg('Error al generar link.')
                         setTimeout(() => setActionMsg(null), 3000)
@@ -220,6 +228,10 @@ export default function ProjectDetailPage() {
                     onClick={async () => {
                       try {
                         await exportXlsx(c.id, `calculo_RIC_${c.name || c.id}.xlsx`)
+                        if (isNativePlatform()) {
+                          setActionMsg('Excel guardado en Documentos.')
+                          setTimeout(() => setActionMsg(null), 3500)
+                        }
                       } catch {
                         setActionMsg('Error al exportar Excel.')
                         setTimeout(() => setActionMsg(null), 3000)
@@ -238,6 +250,52 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </main>
+
+      {/* Modal: mostrar URL para copia manual cuando clipboard no funciona */}
+      {shareUrl && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+          onClick={() => setShareUrl(null)}
+        >
+          <div
+            className="bg-[#161B22] border border-[#30363D] rounded-lg p-5 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold mb-2 text-[#E6EDF3]">Link público</h3>
+            <p className="text-xs text-[#8B949E] mb-3">
+              Mantén presionado el campo para seleccionar y copiar el link.
+            </p>
+            <input
+              type="text"
+              readOnly
+              value={shareUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-xs text-[#E6EDF3] font-mono"
+            />
+            <div className="flex gap-2 pt-3 mt-3 border-t border-[#30363D]">
+              <button
+                type="button"
+                onClick={async () => {
+                  const ok = await copyToClipboard(shareUrl)
+                  setShareUrl(null)
+                  setActionMsg(ok ? 'Link copiado.' : 'Copia el link manualmente.')
+                  setTimeout(() => setActionMsg(null), 3000)
+                }}
+                className="flex-1 bg-[#238636] hover:bg-[#2EA043] text-white text-sm font-medium py-2 rounded transition-colors"
+              >
+                Intentar copiar
+              </button>
+              <button
+                type="button"
+                onClick={() => setShareUrl(null)}
+                className="flex-1 bg-[#21262D] hover:bg-[#30363D] text-sm py-2 rounded transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { Header } from '@/components/layout/Header'
 import { calcGrounding } from '@/lib/api'
 import type { GroundingInput, GroundingResult } from '@/types'
 
@@ -195,9 +196,12 @@ export default function GroundingPage() {
   const showTN = inp.tipo_instalacion === 'tn'
 
   return (
-    <div style={s.page}>
-      <h1 style={s.h1}>⏚ Puesta a Tierra</h1>
-      <p style={s.subtitle}>Cálculo de resistencia de electrodos — RIC Art. 3.12</p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <Header title="Puesta a Tierra" />
+      <main style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={s.page}>
+          <h1 style={s.h1}>⏚ Puesta a Tierra</h1>
+          <p style={s.subtitle}>Cálculo de resistencia de electrodos — RIC Art. 3.12</p>
 
       <form onSubmit={handleSubmit}>
         {/* Tipo de electrodo */}
@@ -457,6 +461,8 @@ export default function GroundingPage() {
           )}
         </div>
       )}
+        </div>
+      </main>
     </div>
   )
 }

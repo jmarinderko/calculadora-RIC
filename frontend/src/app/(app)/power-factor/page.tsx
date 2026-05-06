@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import { Header } from '@/components/layout/Header'
+import { useSidebar } from '@/components/layout/SidebarContext'
 import { calcPowerFactor } from '@/lib/api'
 import type { PowerFactorInput, PowerFactorResult } from '@/types'
 
@@ -132,6 +134,7 @@ function TriangleDiagram({ result }: { result: PowerFactorResult }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function PowerFactorPage() {
+  const { isMobile } = useSidebar()
   const [inp, setInp] = useState<PowerFactorInput>(defaultInput())
   const [result, setResult] = useState<PowerFactorResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -162,18 +165,28 @@ export default function PowerFactorPage() {
   const fieldStyle = { marginBottom: '12px' }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '24px', color: C.text, fontFamily: "'IBM Plex Sans', sans-serif" }}>
-      {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: C.text, margin: 0 }}>
-          Corrección de Factor de Potencia
-        </h1>
-        <p style={{ fontSize: '13px', color: C.muted, margin: '4px 0 0' }}>
-          Banco de condensadores — kVAR a compensar, banco estándar y ahorro tarifario
-        </p>
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <Header title="Factor de Potencia" />
+      <main style={{ flex: 1, overflowY: 'auto', background: C.bg, color: C.text, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+        <div style={{ padding: '24px' }}>
+          {/* Header interno */}
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, color: C.text, margin: 0 }}>
+              Corrección de Factor de Potencia
+            </h1>
+            <p style={{ fontSize: '13px', color: C.muted, margin: '4px 0 0' }}>
+              Banco de condensadores — kVAR a compensar, banco estándar y ahorro tarifario
+            </p>
+          </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: '24px', alignItems: 'start' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '340px 1fr',
+              gap: '24px',
+              alignItems: 'start',
+            }}
+          >
         {/* Formulario */}
         <form onSubmit={handleSubmit} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '20px' }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: C.blue, marginBottom: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -329,6 +342,8 @@ export default function PowerFactorPage() {
           )}
         </div>
       </div>
+        </div>
+      </main>
     </div>
   )
 }

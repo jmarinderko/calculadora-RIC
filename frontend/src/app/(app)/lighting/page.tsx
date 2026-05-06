@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { Header } from '@/components/layout/Header'
 import { calcLighting } from '@/lib/api'
 import type { LightingInput, LightingResult } from '@/types'
 
@@ -238,9 +239,12 @@ export default function LightingPage() {
   }
 
   return (
-    <div style={s.page}>
-      <h1 style={s.h1}>Cálculo de Iluminación</h1>
-      <p style={s.subtitle}>Método de Cavidades Zonales — Verificación NCh 2/1984</p>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <Header title="Iluminación" />
+      <main style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={s.page}>
+          <h1 style={s.h1}>Cálculo de Iluminación</h1>
+          <p style={s.subtitle}>Método de Cavidades Zonales — Verificación NCh 2/1984</p>
 
       <form onSubmit={handleSubmit}>
 
@@ -501,6 +505,8 @@ export default function LightingPage() {
           </div>
         </div>
       )}
+        </div>
+      </main>
     </div>
   )
 }
