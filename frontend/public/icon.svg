@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#F0B429" rx="80"/>
+  <text x="256" y="290" font-family="ui-monospace, 'IBM Plex Mono', Menlo, monospace" font-size="160" font-weight="700" text-anchor="middle" fill="#0D1117" letter-spacing="-6">RIC</text>
+  <text x="256" y="370" font-family="ui-monospace, 'IBM Plex Mono', Menlo, monospace" font-size="56" font-weight="500" text-anchor="middle" fill="#0D1117">.calc</text>
+</svg>
