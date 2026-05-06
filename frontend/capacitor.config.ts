@@ -6,8 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     // En desarrollo, apuntar al servidor Next.js local
+    // 10.0.2.2 = alias del emulador Android para acceder al localhost del host
+    // Para dispositivo físico: reemplazar por la IP LAN del PC (ej: 192.168.1.20)
     ...(process.env.NODE_ENV === 'development' && {
-      url: 'http://localhost:3001',
+      url: 'http://10.0.2.2:3000',
       cleartext: true,
     }),
   },
