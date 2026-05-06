@@ -5,11 +5,24 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
 from contextlib import asynccontextmanager
+import logging
 import re
+import sys
+import traceback
 
 from app.config import settings
 from app.core.rate_limit import limiter
 from app.db.session import init_db
+
+
+# Configurar logging para que vaya a stdout (Railway captura stdout en Deploy Logs)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    stream=sys.stdout,
+    force=True,
+)
+logger = logging.getLogger("ric.backend")
 from app.api.routes import health, auth, calc, projects, unifilar, reports
 from app.api.routes import calc_mtat
 from app.api.routes import calc_ernc
@@ -51,6 +64,23 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONRe
             "detail": "Demasiadas solicitudes. Por favor espera unos minutos antes de reintentar.",
             "retry_after_seconds": int(exc.detail.split(" ")[-2]) if "in" in str(exc.detail) else 60,
         },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Captura cualquier excepción no manejada y la loguea con traceback completo
+    a stdout para que aparezca en los Deploy Logs de Railway. Sin esto, las
+    excepciones solo iban a stderr y eran difíciles de ver.
+    """
+    tb = traceback.format_exc()
+    logger.error(
+        "Unhandled exception on %s %s: %s\n%s",
+        request.method, request.url.path, exc, tb,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
     )
 
 # Orígenes CORS: lista fija + extra_cors_origins + subdominios Railway/Vercel automáticos.

@@ -29,8 +29,17 @@ router = APIRouter()
 
 # Hash bcrypt fijo de un valor random — usado para timing-safe login cuando
 # el email no existe (mantiene constante el tiempo de respuesta).
-# Se calcula una sola vez al cargar el módulo.
-_DUMMY_HASH = hash_password("dummy_password_for_timing_safety_" + secrets_module.token_hex(8))
+# Se calcula lazy en el primer login para evitar que el módulo falle al
+# importar si bcrypt tiene un problema de compatibilidad con la libc del
+# container (ej. passlib + bcrypt 4.x en Python 3.12).
+_DUMMY_HASH: str | None = None
+
+
+def _get_dummy_hash() -> str:
+    global _DUMMY_HASH
+    if _DUMMY_HASH is None:
+        _DUMMY_HASH = hash_password("dummy_password_for_timing_safety_" + secrets_module.token_hex(8))
+    return _DUMMY_HASH
 
 
 class RegisterRequest(BaseModel):
@@ -123,7 +132,7 @@ async def login(
 
     if user is None:
         # Email no existe → ejecutar bcrypt dummy para mantener timing constante
-        verify_password(body.password, _DUMMY_HASH)
+        verify_password(body.password, _get_dummy_hash())
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
 
     if not verify_password(body.password, user.hashed_password):
