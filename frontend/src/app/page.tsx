@@ -485,7 +485,7 @@ export default function LandingPage() {
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section id="precios" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
+      {/* <section id="precios" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <Tag>Planes</Tag>
           <h2 style={{
@@ -507,7 +507,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* <div style={{
+        <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: 16,
@@ -591,8 +591,8 @@ export default function LandingPage() {
               </Link>
             </div>
           ))}
-        </div> */}
-      </section>
+        </div>
+      </section> */}
 
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 
