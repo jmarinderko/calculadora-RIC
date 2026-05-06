@@ -63,16 +63,22 @@ async def export_xlsx(
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    result = await db.execute(
-        select(Calculation).where(Calculation.id == uuid.UUID(calculation_id))
-    )
-    calc = result.scalar_one_or_none()
-    if not calc:
-        raise HTTPException(status_code=404, detail="Cálculo no encontrado")
+    try:
+        calc_uuid = uuid.UUID(calculation_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="ID de cálculo inválido")
 
-    proj_result = await db.execute(select(Project).where(Project.id == calc.project_id))
-    project = proj_result.scalar_one_or_none()
-    if not project or str(project.owner_id) != str(current_user.id):
+    # SELECT con JOIN: chequeo ownership + datos de proyecto en una sola query
+    stmt = (
+        select(Calculation, Project)
+        .join(Project, Project.id == Calculation.project_id)
+        .where(Calculation.id == calc_uuid)
+    )
+    row = (await db.execute(stmt)).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Cálculo no encontrado")
+    calc, project = row
+    if str(project.owner_id) != str(current_user.id):
         raise HTTPException(status_code=403, detail="Sin acceso")
 
     wb = openpyxl.Workbook()

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.db.models import User
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter
 from app.engine.schemas_mtat import MtatInput, MtatResponse
 from app.engine.calculator_mtat import calculate_mtat
 
@@ -25,8 +26,12 @@ async def calc_mtat(
 
 
 @router.post("/mtat/public", response_model=MtatResponse)
-async def calc_mtat_public(body: MtatInput):
-    """Endpoint público MT/AT para pruebas (sin autenticación)."""
+@limiter.limit("30/minute;500/hour")
+async def calc_mtat_public(request: Request, body: MtatInput):
+    """Endpoint público MT/AT para pruebas (sin autenticación).
+
+    Rate limit: 30/min y 500/hora por IP.
+    """
     try:
         return calculate_mtat(body)
     except ValueError as e:

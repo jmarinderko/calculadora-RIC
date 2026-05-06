@@ -1,0 +1,43 @@
+"""
+Rate limiting centralizado con slowapi.
+
+Estrategia:
+- Por IP del cliente (X-Forwarded-For respetado tras proxy Railway).
+- Storage en memoria por defecto (suficiente para una sola instancia del backend).
+  Para multi-instance escalar a Redis: storage_uri=settings.redis_url.
+- Endpoints sensibles (login, register, google) tienen límites estrictos.
+- Endpoints /public (calc, mtat, ernc, pf) tienen límites generosos pero
+  evitan que un atacante sature la CPU con DoS.
+
+En tests (`environment=test`) el limiter se deshabilita para no romper la
+suite — los rate limits son comportamiento de runtime, no de unit tests.
+"""
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+from app.config import settings
+
+
+def _is_test_env() -> bool:
+    return settings.environment.lower() in ("test", "testing")
+
+
+# Storage URI: Redis en producción si está configurado, memoria local si no.
+# slowapi acepta tanto memory:// como redis://...
+_storage_uri = (
+    settings.redis_url
+    if settings.redis_url and not _is_test_env()
+    else "memory://"
+)
+
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri=_storage_uri,
+    # En tests, fingimos que estamos siempre fuera de los límites
+    enabled=not _is_test_env(),
+    # Estrategia: ventana fija — más eficiente y predecible
+    strategy="fixed-window",
+    # Headers automáticos: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After
+    headers_enabled=True,
+)

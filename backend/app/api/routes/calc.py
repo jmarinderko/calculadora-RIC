@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.db.models import User
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter
 from app.engine.schemas import CalculatorInput, CalculatorResponse
 from app.engine.calculator import calculate
 
@@ -21,8 +22,12 @@ async def calc_conductor(
 
 
 @router.post("/conductor/public", response_model=CalculatorResponse)
-async def calc_conductor_public(body: CalculatorInput):
-    """Endpoint público para pruebas y verificación (sin autenticación)."""
+@limiter.limit("30/minute;500/hour")
+async def calc_conductor_public(request: Request, body: CalculatorInput):
+    """Endpoint público para pruebas y verificación (sin autenticación).
+
+    Rate limit: 30/min y 500/hora por IP — evita DoS sobre el motor de cálculo.
+    """
     try:
         return calculate(body)
     except ValueError as e:

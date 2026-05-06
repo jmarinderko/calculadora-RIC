@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, cast, Date
 from pydantic import BaseModel
@@ -173,8 +173,10 @@ async def get_charts(
 async def list_users(
     db: AsyncSession = Depends(get_session),
     _: User = Depends(get_current_admin),
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    # Hard-cap a 100 — evita que admin comprometido exporte lista masiva en
+    # una sola query. Para listar más, usar paginación.
+    limit: int = Query(50, ge=1, le=100),
 ):
     # Usuarios con conteo de proyectos
     result = await db.execute(

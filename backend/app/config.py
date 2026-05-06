@@ -43,7 +43,11 @@ class Settings(BaseSettings):
     # JWT
     jwt_secret: str = "dev_secret_change_me"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 10080  # 7 días
+    # 1440 min = 24h. Antes era 10080 (7 días). Reducido por mitigación de
+    # robo de token via XSS — sin refresh tokens implementados aún, 24h es
+    # el balance entre seguridad y UX (no obligar login diario).
+    # Cambio de password invalida el token vía pwd_iat (ver core/security.py).
+    jwt_expire_minutes: int = 1440
 
     # Entorno
     environment: str = "development"

@@ -1,11 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 from contextlib import asynccontextmanager
 import re
 
 from app.config import settings
+from app.core.rate_limit import limiter
 from app.db.session import init_db
 from app.api.routes import health, auth, calc, projects, unifilar, reports
 from app.api.routes import calc_mtat
@@ -32,6 +35,23 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Rate limiting global con slowapi.
+# El limiter está accesible en app.state.limiter para los decoradores @limiter.limit(...)
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Respuesta amigable cuando se excede el rate limit."""
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": "Demasiadas solicitudes. Por favor espera unos minutos antes de reintentar.",
+            "retry_after_seconds": int(exc.detail.split(" ")[-2]) if "in" in str(exc.detail) else 60,
+        },
+    )
 
 # Orígenes CORS: lista fija + extra_cors_origins + subdominios Railway/Vercel automáticos.
 # Regex estrictas (sin `.*`) para evitar ReDoS y limitar a hostnames válidos.
@@ -81,6 +101,16 @@ class DynamicCORSMiddleware(BaseHTTPMiddleware):
 app.add_middleware(DynamicCORSMiddleware)
 
 
+# CSP: política para respuestas JSON de la API. Como esta API NO sirve HTML,
+# bloqueamos casi todo. El frontend Next.js tiene su propia CSP (Next config).
+_CSP_API = (
+    "default-src 'none'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'none'; "
+    "form-action 'none'"
+)
+
+
 # Headers HTTP de seguridad aplicados a todas las respuestas de la API.
 # Nota: HSTS solo se setea fuera de development — evita problemas con certs
 # self-signed locales.
@@ -91,6 +121,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        response.headers.setdefault("Content-Security-Policy", _CSP_API)
+        # Cross-Origin-* policies blindan contra Spectre/side-channel y embedding
+        response.headers.setdefault("Cross-Origin-Resource-Policy", "same-site")
+        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
         if settings.environment != "development":
             response.headers.setdefault(
                 "Strict-Transport-Security",

@@ -17,6 +17,13 @@ const themeInitScript = `
 })();
 `
 
+// Escapa "</" en JSON embebido en <script> para que un valor con literal
+// "</script>" no termine prematuramente el bloque. Defensa en profundidad
+// aunque APP_URL viene de env (no user-input).
+function safeJsonForScript(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\u003c')
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
@@ -85,6 +92,28 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Pre-cargar la sesión en el server — evita flash "no logueado → logueado"
   const session = await getServerSession(authOptions)
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'RIC Conductor',
+    applicationCategory: 'EngineeringApplication',
+    operatingSystem: 'Web',
+    url: APP_URL,
+    description:
+      'Calculadora profesional de conductores eléctricos conforme norma RIC chilena. Dimensionamiento BT, MT/AT, ERNC, puesta a tierra, factor de potencia e iluminación.',
+    offers: [
+      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'Enterprise', price: '59', priceCurrency: 'USD' },
+    ],
+    inLanguage: 'es-CL',
+    audience: {
+      '@type': 'Audience',
+      audienceType: 'Ingenieros eléctricos en Chile',
+    },
+  }
+
   return (
     <html lang="es-CL" suppressHydrationWarning>
       <head>
@@ -105,28 +134,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'SoftwareApplication',
-              name: 'RIC Conductor',
-              applicationCategory: 'EngineeringApplication',
-              operatingSystem: 'Web',
-              url: APP_URL,
-              description:
-                'Calculadora profesional de conductores eléctricos conforme norma RIC chilena. Dimensionamiento BT, MT/AT, ERNC, puesta a tierra, factor de potencia e iluminación.',
-              offers: [
-                { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
-                { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD' },
-                { '@type': 'Offer', name: 'Enterprise', price: '59', priceCurrency: 'USD' },
-              ],
-              inLanguage: 'es-CL',
-              audience: {
-                '@type': 'Audience',
-                audienceType: 'Ingenieros eléctricos en Chile',
-              },
-            }),
-          }}
+          dangerouslySetInnerHTML={{ __html: safeJsonForScript(structuredData) }}
         />
       </head>
       <body

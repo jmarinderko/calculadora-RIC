@@ -236,9 +236,7 @@ Para Play Store hace falta:
 
 ## Admin pre-creado en producción
 
-- Email: `admin@ric.cl`
-- Password: `admin123`
-- `is_admin=true`
+Las credenciales del admin **NO se documentan en el repo** por seguridad. El owner las mantiene en su gestor de contraseñas. Si se pierden, se puede reconstruir vía SQL directo en Postgres Railway (`UPDATE users SET hashed_password = ..., is_admin = true WHERE email = ...`) usando un hash bcrypt generado con `python -c "from passlib.hash import bcrypt; print(bcrypt.hash('NUEVA_PASSWORD'))"`.
 
 ## Estilo de respuesta esperado de Claude
 

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.db.models import User
 from app.api.deps import get_current_user
+from app.core.rate_limit import limiter
 from app.engine.power_factor import PowerFactorInput, PowerFactorResult, calcular_correccion_fp
 
 router = APIRouter()
@@ -24,8 +25,9 @@ async def calc_power_factor(
 
 
 @router.post("/power-factor/public", response_model=PowerFactorResult)
-async def calc_power_factor_public(body: PowerFactorInput):
-    """Endpoint público para pruebas (sin autenticación)."""
+@limiter.limit("30/minute;500/hour")
+async def calc_power_factor_public(request: Request, body: PowerFactorInput):
+    """Endpoint público para pruebas (sin autenticación). Rate limit: 30/min."""
     try:
         return calcular_correccion_fp(body)
     except ValueError as e:

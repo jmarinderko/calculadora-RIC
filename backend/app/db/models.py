@@ -26,6 +26,15 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
+    # Tracking del último cambio de password — usado por decode_token para
+    # invalidar JWTs emitidos antes del cambio.
+    password_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    # Provider de auth: 'credentials' (email+password) o 'google' (OAuth).
+    # Si es 'google', el endpoint /login rechaza la cuenta para forzar uso de
+    # Google login.
+    auth_provider: Mapped[str] = mapped_column(String(20), default="credentials", nullable=False)
+
     projects: Mapped[list["Project"]] = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
 
 
