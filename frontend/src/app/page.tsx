@@ -40,12 +40,12 @@ const features = [
     desc: 'Cálculo de banco de condensadores para corrección de FP. Selección de banco estándar, ahorro energético y reducción de penalización.',
     tag: 'Corrección FP',
   },
-  {
-    icon: '💡',
-    title: 'Iluminación Zonal',
-    desc: 'Método de cavidades zonales para recintos interiores. Cálculo de luminarias necesarias conforme niveles mínimos NCh.',
-    tag: 'NCh iluminación',
-  },
+  // {
+  //   icon: '💡',
+  //   title: 'Iluminación Zonal',
+  //   desc: 'Método de cavidades zonales para recintos interiores. Cálculo de luminarias necesarias conforme niveles mínimos NCh.',
+  //   tag: 'NCh iluminación',
+  // },
   {
     icon: '📄',
     title: 'PDF Memoria de Cálculo',
