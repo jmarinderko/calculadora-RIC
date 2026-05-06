@@ -2,11 +2,13 @@
 Rutas para el diagrama unifilar SVG.
 POST /api/unifilar/generate  → SVG generado on-the-fly desde resultado + input.
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Any
 
+from app.api.deps import get_current_user
+from app.db.models import User
 from app.engine.unifilar_generator import generate_unifilar
 
 router = APIRouter()
@@ -31,7 +33,10 @@ class UnifilarRequest(BaseModel):
         }
     },
 )
-async def generate_unifilar_diagram(body: UnifilarRequest):
+async def generate_unifilar_diagram(
+    body: UnifilarRequest,
+    current_user: User = Depends(get_current_user),
+):
     """
     Genera el diagrama unifilar SVG a partir del resultado del cálculo RIC.
 

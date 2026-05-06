@@ -80,4 +80,30 @@ class Settings(BaseSettings):
         case_sensitive = False
 
 
+# Defaults inseguros que NO deben usarse en producción.
+# Si el environment NO es "development" y alguno de estos coincide con el valor
+# configurado, abortamos el startup para evitar correr con secretos débiles.
+_INSECURE_DEFAULTS = {
+    "jwt_secret": {"dev_secret_change_me", "dev_secret_change_me_in_prod_use_openssl_rand_hex_32"},
+}
+
+
+def _validate_production_secrets(s: "Settings") -> None:
+    """Aborta si en prod se detecta un secret con valor default conocido."""
+    if s.environment.lower() in ("development", "dev", "test", "testing"):
+        return
+    insecure = []
+    for field, defaults in _INSECURE_DEFAULTS.items():
+        value = getattr(s, field)
+        if value in defaults:
+            insecure.append(field)
+    if insecure:
+        raise RuntimeError(
+            f"[CONFIG ERROR] Variables con valor default inseguro detectadas en "
+            f"environment={s.environment!r}: {insecure}. "
+            f"Generar uno seguro con `openssl rand -hex 32` y setearlo como env var."
+        )
+
+
 settings = Settings()
+_validate_production_secrets(settings)
