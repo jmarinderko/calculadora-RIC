@@ -2,12 +2,13 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Header } from '@/components/layout/Header'
+import { PasswordInput } from '@/components/PasswordInput'
 import { getProfile, updateProfile } from '@/lib/api'
 import type { UserProfile } from '@/types'
 
 export default function ProfilePage() {
   const { data: session } = useSession()
-  const isGoogle = (session as any)?.provider === 'google'
+  const isGoogle = session?.provider === 'google'
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -144,24 +145,25 @@ export default function ProfilePage() {
           <form onSubmit={handleSavePwd} className="space-y-3">
             <div>
               <label className="text-xs text-[#8B949E] block mb-1">Contraseña actual</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={currentPwd}
-                onChange={e => setCurrentPwd(e.target.value)}
+                onChange={setCurrentPwd}
                 required
-                className="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-sm text-[#E6EDF3] focus:outline-none focus:border-[#58A6FF]"
+                autoComplete="current-password"
               />
             </div>
             <div>
               <label className="text-xs text-[#8B949E] block mb-1">Nueva contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={newPwd}
-                onChange={e => setNewPwd(e.target.value)}
+                onChange={setNewPwd}
                 required
-                minLength={8}
-                className="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-sm text-[#E6EDF3] focus:outline-none focus:border-[#58A6FF]"
+                autoComplete="new-password"
+                placeholder="Mínimo 10 caracteres, con letras y números"
               />
+              <p className="text-xs text-[#6E7681] mt-1">
+                10 caracteres mínimo. Cambiar la contraseña cerrará tus sesiones en otros dispositivos.
+              </p>
             </div>
             {pwdMsg && (
               <p className={`text-xs ${pwdMsg.ok ? 'text-[#3FB950]' : 'text-[#F85149]'}`}>

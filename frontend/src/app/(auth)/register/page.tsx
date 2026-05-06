@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { registerApi } from '@/lib/api'
+import { PasswordInput } from '@/components/PasswordInput'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -97,15 +98,16 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="block text-sm text-[#8B949E] mb-1">Contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
                 required
-                minLength={8}
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#58A6FF] transition-colors"
-                placeholder="Mínimo 8 caracteres"
+                onChange={setPassword}
+                placeholder="Mínimo 10 caracteres, con letras y números"
+                autoComplete="new-password"
               />
+              <p className="text-xs text-[#6E7681] mt-1">
+                10 caracteres mínimo, con al menos una letra y un número.
+              </p>
             </div>
             <button
               type="submit"

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { PasswordInput } from '@/components/PasswordInput'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -82,12 +83,11 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="block text-sm text-[#8B949E] mb-1">Contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-sm text-[#E6EDF3] placeholder:text-[#6E7681] focus:outline-none focus:border-[#58A6FF] transition-colors"
+                onChange={setPassword}
+                autoComplete="current-password"
               />
             </div>
             <button
