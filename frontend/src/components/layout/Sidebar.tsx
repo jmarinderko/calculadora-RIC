@@ -126,7 +126,7 @@ export function Sidebar() {
           })}
 
           {/* Admin link — solo visible para administradores */}
-          {(session as any)?.isAdmin && (
+          {session?.isAdmin && (
             <>
               <div style={{ height: 1, background: 'var(--border)', margin: '8px 4px' }} />
               <Link

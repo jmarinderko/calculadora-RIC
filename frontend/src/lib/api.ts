@@ -144,8 +144,8 @@ export async function generateReport(calculationId: string): Promise<ReportOut> 
 export async function downloadReportPdf(reportId: string, filename = 'memoria_calculo_RIC.pdf'): Promise<void> {
   const session = await getSession()
   const headers: Record<string, string> = {}
-  if ((session as any)?.accessToken) {
-    headers['Authorization'] = `Bearer ${(session as any).accessToken}`
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`
   }
   const resp = await fetch(`${resolveApiBase()}/api/reports/${reportId}/download`, { headers })
   if (!resp.ok) {
@@ -213,8 +213,8 @@ export async function downloadSecMemory(
 ): Promise<void> {
   const session = await getSession()
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if ((session as any)?.accessToken) {
-    headers['Authorization'] = `Bearer ${(session as any).accessToken}`
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`
   }
   const resp = await fetch(`${resolveApiBase()}/api/reports/project/${projectId}/sec-memory`, {
     method: 'POST',
@@ -259,8 +259,8 @@ export async function getPublicCalculation(token: string): Promise<PublicCalcula
 export async function exportXlsx(calculationId: string, filename = 'calculo_RIC.xlsx'): Promise<void> {
   const session = await getSession()
   const headers: Record<string, string> = {}
-  if ((session as any)?.accessToken) {
-    headers['Authorization'] = `Bearer ${(session as any).accessToken}`
+  if (session?.accessToken) {
+    headers['Authorization'] = `Bearer ${session.accessToken}`
   }
   const resp = await fetch(`${resolveApiBase()}/api/exports/${calculationId}/xlsx`, { headers })
   if (!resp.ok) {

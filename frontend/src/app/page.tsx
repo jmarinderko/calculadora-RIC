@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import LandingNavbar from '@/components/landing/LandingNavbar'
 
+// ─── Feature flags ────────────────────────────────────────────────────────────
+// Toggle UI features sin tocar el resto del código. Activar antes de demo
+// pública / activación de cobro.
+const SHOW_ILUMINACION = false  // pendiente validación con testers
+const SHOW_PRICING = false      // se activa al lanzar plan Pro
+
 // ─── Datos ────────────────────────────────────────────────────────────────────
 
 const features = [
@@ -40,12 +46,12 @@ const features = [
     desc: 'Cálculo de banco de condensadores para corrección de FP. Selección de banco estándar, ahorro energético y reducción de penalización.',
     tag: 'Corrección FP',
   },
-  // {
-  //   icon: '💡',
-  //   title: 'Iluminación Zonal',
-  //   desc: 'Método de cavidades zonales para recintos interiores. Cálculo de luminarias necesarias conforme niveles mínimos NCh.',
-  //   tag: 'NCh iluminación',
-  // },
+  ...(SHOW_ILUMINACION ? [{
+    icon: '💡',
+    title: 'Iluminación Zonal',
+    desc: 'Método de cavidades zonales para recintos interiores. Cálculo de luminarias necesarias conforme niveles mínimos NCh.',
+    tag: 'NCh iluminación',
+  }] : []),
   {
     icon: '📄',
     title: 'PDF Memoria de Cálculo',
@@ -485,7 +491,8 @@ export default function LandingPage() {
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 
       {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      {/* <section id="precios" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
+      {SHOW_PRICING && (
+      <section id="precios" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <Tag>Planes</Tag>
           <h2 style={{
@@ -592,7 +599,8 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-      </section> */}
+      </section>
+      )}
 
       <div style={{ borderTop: '1px solid var(--border)', margin: '0 24px' }} />
 

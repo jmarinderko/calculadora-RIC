@@ -54,7 +54,7 @@ export function OfflineBadge() {
               display: 'inline-block',
             }}
           />
-          Sin conexion — modo offline
+          Sin conexión — modo offline
         </div>
       )}
 
@@ -78,7 +78,7 @@ export function OfflineBadge() {
         >
           {syncing
             ? `Sincronizando... (${pending})`
-            : `${pending} calculo${pending > 1 ? 's' : ''} pendiente${pending > 1 ? 's' : ''}`}
+            : `${pending} cálculo${pending > 1 ? 's' : ''} pendiente${pending > 1 ? 's' : ''}`}
         </button>
       )}
     </div>

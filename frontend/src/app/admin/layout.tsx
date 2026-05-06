@@ -18,12 +18,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (status === 'loading') return
-    if (!session || !(session as any).isAdmin) {
+    if (!session || !session.isAdmin) {
       router.replace('/dashboard')
     }
   }, [session, status, router])
 
-  if (status === 'loading' || !(session as any)?.isAdmin) {
+  if (status === 'loading' || !session?.isAdmin) {
     return (
       <div style={{ padding: 40, textAlign: 'center', color: 'var(--text3)', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>
         Verificando permisos...
