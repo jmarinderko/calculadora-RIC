@@ -2,12 +2,20 @@ import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 
+// GoogleProvider sólo se registra si hay credenciales reales.
+// Sin esto, NextAuth lanza "Configuration error" al arrancar con clientId vacío.
+const googleEnabled = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
+
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-    }),
+    ...(googleEnabled
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -100,6 +108,8 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   session: { strategy: 'jwt' },
+  // Logging detallado en dev — escribe a la terminal de `next dev`
+  debug: process.env.NODE_ENV === 'development',
 }
 
 declare module 'next-auth' {

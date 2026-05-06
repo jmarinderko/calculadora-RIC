@@ -11,16 +11,15 @@ interface ThemeCtx {
 const ThemeContext = createContext<ThemeCtx>({ theme: 'dark', toggle: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // El script inline en `layout.tsx` ya aplicó `html.light` antes de hidratar
+  // si correspondía. Sincronizamos el state de React con la clase real del
+  // <html> para que el toggle no quede desfasado.
   const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ric-tema') as Theme | null
-      if (saved === 'light') {
-        setTheme('light')
-        document.documentElement.classList.add('light')
-      }
-    } catch {}
+    if (typeof document !== 'undefined' && document.documentElement.classList.contains('light')) {
+      setTheme('light')
+    }
   }, [])
 
   function toggle() {

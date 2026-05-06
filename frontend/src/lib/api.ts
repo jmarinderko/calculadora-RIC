@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
+import { saveBlobAsFile } from './platform'
 import type {
   CalculatorInput, CalculatorResponse, CalculatorResult,
   Project, Calculation,
@@ -16,12 +17,29 @@ import type {
   ProjectTemplate,
 } from '@/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Resolver baseURL dinámicamente según el contexto de ejecución:
+// - Si NEXT_PUBLIC_API_URL está definida → se usa (override explícito para prod).
+// - Si estamos en el browser → mismo hostname del documento + puerto 8000.
+//   • Desktop browser (localhost:3000)        → localhost:8000
+//   • Capacitor Android emulador (10.0.2.2)   → 10.0.2.2:8000
+// - SSR / fallback                            → localhost:8000
+function resolveApiBase(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL
+  if (envUrl && envUrl.trim()) return envUrl
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:8000`
+  }
+  return 'http://localhost:8000'
+}
 
-const api = axios.create({ baseURL: API_BASE })
+const api = axios.create()
 
-// Interceptor: agrega JWT en cada petición
+// Interceptor: setea baseURL en cada request (respeta runtime: browser, emulador,
+// SSR) y agrega JWT.
 api.interceptors.request.use(async (config) => {
+  if (!config.baseURL) {
+    config.baseURL = resolveApiBase()
+  }
   const session = await getSession()
   if (session?.accessToken) {
     config.headers.Authorization = `Bearer ${session.accessToken}`
@@ -129,20 +147,13 @@ export async function downloadReportPdf(reportId: string, filename = 'memoria_ca
   if ((session as any)?.accessToken) {
     headers['Authorization'] = `Bearer ${(session as any).accessToken}`
   }
-  const resp = await fetch(`${API_BASE}/api/reports/${reportId}/download`, { headers })
+  const resp = await fetch(`${resolveApiBase()}/api/reports/${reportId}/download`, { headers })
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ detail: resp.statusText }))
     throw new Error((err as any).detail ?? 'Error al descargar el PDF')
   }
   const blob = await resp.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  await saveBlobAsFile(blob, filename)
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
@@ -205,7 +216,7 @@ export async function downloadSecMemory(
   if ((session as any)?.accessToken) {
     headers['Authorization'] = `Bearer ${(session as any).accessToken}`
   }
-  const resp = await fetch(`${API_BASE}/api/reports/project/${projectId}/sec-memory`, {
+  const resp = await fetch(`${resolveApiBase()}/api/reports/project/${projectId}/sec-memory`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ numero_memoria: numeroMemoria }),
@@ -215,14 +226,8 @@ export async function downloadSecMemory(
     throw new Error((err as any).detail ?? 'Error al generar Memoria Técnica')
   }
   const blob = await resp.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `Memoria_SEC_${projectName.replace(/\s+/g, '_')}_${numeroMemoria}.pdf`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  const filename = `Memoria_SEC_${projectName.replace(/\s+/g, '_')}_${numeroMemoria}.pdf`
+  await saveBlobAsFile(blob, filename)
 }
 
 // ── Profile ───────────────────────────────────────────────────────────────────
@@ -257,20 +262,13 @@ export async function exportXlsx(calculationId: string, filename = 'calculo_RIC.
   if ((session as any)?.accessToken) {
     headers['Authorization'] = `Bearer ${(session as any).accessToken}`
   }
-  const resp = await fetch(`${API_BASE}/api/exports/${calculationId}/xlsx`, { headers })
+  const resp = await fetch(`${resolveApiBase()}/api/exports/${calculationId}/xlsx`, { headers })
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ detail: resp.statusText }))
     throw new Error((err as any).detail ?? 'Error al exportar Excel')
   }
   const blob = await resp.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  await saveBlobAsFile(blob, filename)
 }
 
 // ── Voltage Drop Tree ─────────────────────────────────────────────────────────

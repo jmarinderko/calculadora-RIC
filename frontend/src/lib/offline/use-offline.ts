@@ -16,17 +16,51 @@ import { syncAll, onSyncStatus, registerAutoSync, type SyncStatus } from './sync
 
 // ── useOnlineStatus ─────────────────────────────────────────────────────────
 
+// navigator.onLine es poco confiable (VPN, Docker bridges, proxies pueden
+// dar falsos negativos). Combinamos los eventos del browser con un probe
+// real al backend para confirmar conectividad.
+async function probeBackend(signal?: AbortSignal): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/session', {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export function useOnlineStatus(): boolean {
-  const [online, setOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true,
-  )
+  // Asumir online por defecto — evita falsos "Sin conexión" en SSR/hydration
+  const [online, setOnline] = useState(true)
 
   useEffect(() => {
-    const onOn = () => setOnline(true)
+    const ac = new AbortController()
+    let mounted = true
+
+    // Probe inicial para confirmar conectividad real
+    probeBackend(ac.signal).then((ok) => {
+      if (!mounted) return
+      // Si navigator.onLine === false Y el probe falla → realmente offline
+      if (!ok && !navigator.onLine) setOnline(false)
+      else setOnline(true)
+    })
+
+    const onOn = () => {
+      probeBackend(ac.signal).then((ok) => {
+        if (mounted) setOnline(ok || navigator.onLine)
+      })
+    }
     const onOff = () => setOnline(false)
+
     window.addEventListener('online', onOn)
     window.addEventListener('offline', onOff)
+
     return () => {
+      mounted = false
+      ac.abort()
       window.removeEventListener('online', onOn)
       window.removeEventListener('offline', onOff)
     }

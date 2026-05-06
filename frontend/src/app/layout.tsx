@@ -1,8 +1,21 @@
 import type { Metadata } from 'next'
+import { getServerSession } from 'next-auth'
 import './globals.css'
 import { Providers } from './providers'
+import { authOptions } from '@/lib/auth'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://ricconductor.cl'
+
+// Script inyectado ANTES de hidratación — evita flash de tema (FOUC)
+// dark → light al cargar páginas con localStorage `ric-tema = light`.
+const themeInitScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('ric-tema');
+    if (t === 'light') document.documentElement.classList.add('light');
+  } catch (e) {}
+})();
+`
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -64,10 +77,14 @@ export const metadata: Metadata = {
   category: 'engineering',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Pre-cargar la sesión en el server — evita flash "no logueado → logueado"
+  const session = await getServerSession(authOptions)
   return (
     <html lang="es-CL">
       <head>
+        {/* Aplica tema desde localStorage antes del primer paint */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#f0b429" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -113,7 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           minHeight: '100vh',
         }}
       >
-        <Providers>{children}</Providers>
+        <Providers session={session}>{children}</Providers>
       </body>
     </html>
   )

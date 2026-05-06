@@ -47,5 +47,16 @@ coverage.xml
 # Next.js
 frontend/.next/
 frontend/out/
+frontend/tsconfig.tsbuildinfo
+frontend/next-env.d.ts
 docs/RAVIT CH-5319 FUCO (0).xlsm
 docs/RIC_Conductor_SaaS_ProductDoc.docx
+
+# PWA generated (next-pwa los regenera en cada build)
+frontend/public/sw.js
+frontend/public/swe-worker-*.js
+frontend/public/workbox-*.js
+
+# Capacitor — plataforma nativa Android
+# Se regenera con `npx cap add android` después del clone
+frontend/android/
