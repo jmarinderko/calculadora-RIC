@@ -81,9 +81,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Pre-cargar la sesión en el server — evita flash "no logueado → logueado"
   const session = await getServerSession(authOptions)
   return (
-    <html lang="es-CL">
+    <html lang="es-CL" suppressHydrationWarning>
       <head>
-        {/* Aplica tema desde localStorage antes del primer paint */}
+        {/* Aplica tema desde localStorage antes del primer paint.
+            El script muta <html> antes que React hidrate — por eso el
+            html lleva suppressHydrationWarning (la diferencia es intencional). */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#f0b429" />
@@ -123,6 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body
+        suppressHydrationWarning
         style={{
           background: 'var(--bg)',
           color: 'var(--text)',
