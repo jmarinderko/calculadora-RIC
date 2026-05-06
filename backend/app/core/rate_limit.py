@@ -37,6 +37,9 @@ limiter = Limiter(
     enabled=not _is_test_env(),
     # Estrategia: ventana fija — más eficiente y predecible
     strategy="fixed-window",
-    # Headers automáticos: X-RateLimit-Limit, X-RateLimit-Remaining, Retry-After
-    headers_enabled=True,
+    # headers_enabled=False: con FastAPI + endpoints que retornan Pydantic
+    # models (no Response), slowapi falla al intentar inyectar headers de
+    # rate-limit (`parameter response must be an instance of ...Response`).
+    # El cliente igual puede inferir límites del 429 retornado al exceder.
+    headers_enabled=False,
 )
