@@ -5,6 +5,7 @@ Endpoints:
   GET  /reports/{report_id}/download        → retorna el PDF binario
 """
 import logging
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Optional
 import uuid
@@ -246,7 +247,7 @@ async def generate_sec_memory(
         sistemas[s] = sistemas.get(s, 0) + 1
     sistema_pred = max(sistemas, key=lambda k: sistemas[k])
     tensiones = [float(c.tension_v) for c in calcs]
-    tension_empalme = max(set(tensiones), key=lambda t: tensiones.count(t))
+    tension_empalme = Counter(tensiones).most_common(1)[0][0] if tensiones else 0
     if sistema_pred == "trifasico":
         i_empalme = kva_total * 1000 / (_math.sqrt(3) * tension_empalme) if tension_empalme else 0
     else:

@@ -5,8 +5,7 @@ from sqlalchemy import select
 from io import BytesIO
 import uuid
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, PatternFill, Alignment
 
 from app.db.session import get_session
 from app.db.models import Calculation, Project

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
 from pydantic import BaseModel, Field
 from typing import Optional
+from collections import Counter
 import math
 import uuid
 
@@ -84,6 +85,8 @@ class DemandaSummaryOut(BaseModel):
 
 @router.get("", response_model=list[ProjectOut])
 async def list_projects(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
@@ -96,6 +99,8 @@ async def list_projects(
         .where(Project.owner_id == current_user.id)
         .group_by(Project.id)
         .order_by(Project.created_at.desc())
+        .offset(skip)
+        .limit(limit)
     )
     rows = (await db.execute(stmt)).all()
     return [
@@ -261,7 +266,7 @@ async def get_demand_summary(
 
     # Tensión y corriente de empalme: usar la tensión más frecuente
     tensiones = [float(c.tension_v) for c in calcs]
-    tension_empalme = max(set(tensiones), key=lambda t: tensiones.count(t))
+    tension_empalme = Counter(tensiones).most_common(1)[0][0] if tensiones else 0
 
     if sistema_pred == "trifasico":
         i_empalme = sum_kva * 1000 / (math.sqrt(3) * tension_empalme) if tension_empalme > 0 else 0.0
