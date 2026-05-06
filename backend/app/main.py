@@ -114,9 +114,14 @@ class DynamicCORSMiddleware(BaseHTTPMiddleware):
         else:
             try:
                 response = await call_next(request)
-            except Exception:
-                # En excepciones no manejadas agregar CORS igualmente para que el
-                # browser muestre el error real (500) en vez de un error CORS falso
+            except Exception as exc:
+                # En excepciones no manejadas: loguear traceback completo a
+                # stdout (Railway logs) antes de devolver 500 con CORS aplicado
+                # (para que el browser muestre el 500 real, no un error CORS).
+                logger.error(
+                    "Unhandled exception in middleware on %s %s: %s\n%s",
+                    request.method, request.url.path, exc, traceback.format_exc(),
+                )
                 response = Response(status_code=500, content=b'{"detail":"Internal server error"}',
                                     media_type="application/json")
 
