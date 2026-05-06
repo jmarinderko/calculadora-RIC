@@ -122,9 +122,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         response.headers.setdefault("Content-Security-Policy", _CSP_API)
-        # Cross-Origin-* policies blindan contra Spectre/side-channel y embedding
-        response.headers.setdefault("Cross-Origin-Resource-Policy", "same-site")
-        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        # Cross-Origin-Resource-Policy: cross-origin permite que el frontend
+        # (otro subdominio Railway) consuma esta API. CORS ya valida quién
+        # puede leer, CORP solo refuerza para no-CORS embeds.
+        response.headers.setdefault("Cross-Origin-Resource-Policy", "cross-origin")
+        # COOP no aplica a respuestas JSON (no hay top-level navigation),
+        # se omite para no causar conflictos con popups OAuth.
         if settings.environment != "development":
             response.headers.setdefault(
                 "Strict-Transport-Security",

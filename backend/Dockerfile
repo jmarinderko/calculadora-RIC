@@ -14,4 +14,7 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Aplica migraciones Alembic antes de arrancar uvicorn.
+# Si la migración falla, el container falla — fail-fast antes de servir
+# tráfico con un schema inconsistente.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
